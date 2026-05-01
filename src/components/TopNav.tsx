@@ -1,9 +1,11 @@
+import { Link } from "@tanstack/react-router";
 type Tab = "shop" | "cart" | "orders" | "profile";
 
 type Props = {
   active: Tab;
   cartCount: number;
   name: string;
+  email?: string; // Add email prop
   onChange: (t: Tab) => void;
 };
 
@@ -13,9 +15,10 @@ const links: { id: Tab; label: string }[] = [
   { id: "profile", label: "Profile" },
 ];
 
-export function TopNav({ active, cartCount, name, onChange }: Props) {
+export function TopNav({ active, cartCount, name, email, onChange }: Props) {
   const initial = name.charAt(0).toUpperCase() || "?";
   const first = name.split(" ")[0] || "";
+  const isAdmin = email === "sktstores37@gmail.com";
 
   return (
     <header className="max-md:hidden sticky top-0 z-[100] bg-surface/80 backdrop-blur-xl border-b border-line/50 shadow-sm transition-all duration-300">
@@ -37,6 +40,14 @@ export function TopNav({ active, cartCount, name, onChange }: Props) {
               {l.label}
             </button>
           ))}
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className="px-5 py-2 rounded-xl text-[14px] font-extrabold text-brand hover:bg-brand/10 transition-all"
+            >
+              Admin ⚙️
+            </Link>
+          )}
         </nav>
         <div className="flex items-center gap-4">
           <button 

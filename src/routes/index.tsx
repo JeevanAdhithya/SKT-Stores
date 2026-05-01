@@ -110,7 +110,7 @@ function Index() {
 
   return (
     <div className="min-h-dvh bg-background overflow-x-hidden">
-      <TopNav active={tab} cartCount={totalQty} name={profile.name} onChange={setTab} />
+      <TopNav active={tab} cartCount={totalQty} name={profile.name} email={profile.email} onChange={setTab} />
       
       <main className="md:px-6 md:py-2">
         <div className="md:hidden max-w-[430px] mx-auto">
