@@ -78,7 +78,8 @@
   --color-danger-bg: var(--danger-bg);
   --color-info: var(--info);
   --color-info-bg: var(--info-bg);
-  --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Plus Jakarta Sans', sans-serif;
 }
 
 :root {
@@ -192,6 +193,11 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
+  }
+
   body {
     font-size: 14px;
   }
@@ -209,5 +215,13 @@
   .animate-slide-up { animation: slideUp .3s cubic-bezier(.34,1.4,.64,1); }
   @keyframes spin360 { to { transform: rotate(360deg); } }
   .animate-spin-brand { animation: spin360 .6s linear infinite; }
-}
 
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)} }
+  .animate-float { animation: float 6s ease-in-out infinite; }
+  @keyframes floatSlow { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-30px)} }
+  .animate-float-slow { animation: floatSlow 8s ease-in-out infinite; }
+  @keyframes bounceSlow { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-15px)} }
+  .animate-bounce-slow { animation: bounceSlow 10s ease-in-out infinite; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-5px)} 40%,80%{transform:translateX(5px)} }
+  .animate-shake { animation: shake 0.4s ease-in-out; }
+}

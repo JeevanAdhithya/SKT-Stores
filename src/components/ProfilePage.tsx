@@ -2,7 +2,7 @@ import { useState } from "react";
 import { signOut, updateProfile, changePassword } from "@/lib/auth";
 import { showToast } from "./Toast";
 import type { UserProfile, Order } from "@/lib/types";
-import type { User } from "firebase/auth";
+import type { User } from "@supabase/supabase-js";
 
 type Props = {
   user: User;

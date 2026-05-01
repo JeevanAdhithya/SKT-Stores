@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { onValue, ref } from "firebase/database";
-import { getDB } from "@/lib/firebase";
+import { supabase } from "@/lib/supabase";
 import type { Product } from "@/lib/types";
 
 export type SyncState = "wait" | "ok" | "err";
@@ -12,32 +11,48 @@ export function useProducts() {
   const [updated, setUpdated] = useState(false);
 
   useEffect(() => {
-    let firstLoad = true;
     let prevSnap = "";
-    const db = getDB();
-    const productsRef = ref(db, "products");
-    const unsub = onValue(
-      productsRef,
-      (snap) => {
-        const data = snap.val();
-        const list: Product[] = data ? Object.values(data) : [];
-        const snapStr = JSON.stringify(list);
-        if (!firstLoad && snapStr !== prevSnap) {
-          setUpdated(true);
-          setTimeout(() => setUpdated(false), 3000);
-        }
-        prevSnap = snapStr;
-        firstLoad = false;
-        setProducts(list);
-        setSync("ok");
-        setError("");
-      },
-      (err) => {
+
+    const fetchProducts = async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("active", true)
+        .order("name");
+
+      if (error) {
         setSync("err");
-        setError(err.message);
-      },
-    );
-    return () => unsub();
+        setError(error.message);
+        return;
+      }
+
+      const list: Product[] = data || [];
+      const snapStr = JSON.stringify(list);
+      if (prevSnap && snapStr !== prevSnap) {
+        setUpdated(true);
+        setTimeout(() => setUpdated(false), 3000);
+      }
+      prevSnap = snapStr;
+      setProducts(list);
+      setSync("ok");
+      setError("");
+    };
+
+    fetchProducts();
+
+    // Subscribe to changes
+    const channel = supabase
+      .channel("products_changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "products" },
+        () => fetchProducts()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return { products, sync, error, updated };
