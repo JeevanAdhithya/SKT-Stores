@@ -43,21 +43,21 @@ export function ShopPage({ products, cart, onAdd, onInc, onDec }: Props) {
         <div className="w-full p-6 md:p-12 flex flex-col md:flex-row items-center justify-between relative z-10 backdrop-blur-[2px] bg-white/[0.02]">
           <div className="flex-1 text-center md:text-left mb-6 md:mb-0">
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full px-4 py-1.5 text-[10px] md:text-xs font-bold mb-4 shadow-lg uppercase tracking-wider">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-ping absolute" />
-              <span className="w-2 h-2 rounded-full bg-green-400 relative" /> 
-              Kitchen Open
+              <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping absolute" />
+              <span className="w-2 h-2 rounded-full bg-blue-400 relative" /> 
+              Store Online
             </div>
             <h2 className="text-3xl md:text-6xl font-black text-white leading-tight mb-3 drop-shadow-lg tracking-tight">
-              Craving something <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300">delicious?</span>
+              Premium <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">Collections</span>
             </h2>
             <p className="text-sm md:text-lg text-white/70 max-w-md font-medium">
-              Order fresh, chef-crafted meals delivered straight to you in minutes.
+              Discover the latest gadgets, fashion, and home essentials at unbeatable prices.
             </p>
           </div>
           <div className="relative group perspective-1000 hidden sm:block">
-            <div className="absolute inset-0 bg-gradient-to-tr from-orange-500 to-yellow-300 rounded-full blur-2xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
+            <div className="absolute inset-0 bg-gradient-to-tr from-blue-500 to-indigo-300 rounded-full blur-2xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
             <div className="text-[70px] md:text-[110px] relative z-10 transform transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6 drop-shadow-2xl">
-              🥗
+              🛍️
             </div>
           </div>
         </div>
@@ -69,7 +69,7 @@ export function ShopPage({ products, cart, onAdd, onInc, onDec }: Props) {
           <span className="text-xl text-brand">🔍</span>
           <input
             type="search"
-            placeholder="Search our delicious menu..."
+            placeholder="Search products, brands, and more..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="flex-1 bg-transparent border-0 py-3.5 text-[15px] font-semibold outline-none"

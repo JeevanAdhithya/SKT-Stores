@@ -36,7 +36,7 @@ export function ProductCard({ product, qty, onAdd, onInc, onDec }: Props) {
         ) : (
           <div className="relative transform transition-transform duration-500 group-hover:scale-125 group-hover:-rotate-3 group-hover:drop-shadow-xl">
              <div className="absolute inset-0 bg-brand/20 blur-[30px] rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-             <span className="text-[64px] relative z-10 drop-shadow-md">{product.emoji || "🍴"}</span>
+             <span className="text-[64px] relative z-10 drop-shadow-md">{product.emoji || "📦"}</span>
           </div>
         )}
         {product.tag && (
