@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { showToast } from "@/components/Toast";
-import { Plus, Package, ShoppingBag, Trash2, Edit2, X, Upload, Link as LinkIcon, CheckCircle, XCircle, Settings, QrCode } from "lucide-react";
+import { Plus, Package, ShoppingBag, Trash2, Edit2, X, Upload, Link as LinkIcon, CheckCircle, XCircle, Settings, QrCode, CreditCard } from "lucide-react";
 import { getStoreSettings, updateStoreSettings } from "@/lib/settings";
 
 const ADMIN_EMAIL = 'sktstores37@gmail.com';

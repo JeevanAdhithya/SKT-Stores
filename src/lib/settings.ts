@@ -5,7 +5,7 @@ export async function getStoreSettings(): Promise<StoreSettings> {
   const { data, error } = await supabase
     .from("store_settings")
     .select("*")
-    .eq("id", "main")
+    .eq("id", 1)
     .single();
 
   if (error || !data) {
@@ -22,7 +22,7 @@ export async function updateStoreSettings(settings: Partial<StoreSettings>) {
   const { error } = await supabase
     .from("store_settings")
     .update(settings)
-    .eq("id", "main");
+    .eq("id", 1);
   
   if (error) throw error;
 }

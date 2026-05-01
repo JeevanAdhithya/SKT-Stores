@@ -1,8 +1,6 @@
 import { useMemo, useState } from "react";
 import { ProductCard } from "./ProductCard";
-import { CategoryStrip } from "./CategoryStrip";
 import type { Product } from "@/lib/types";
-import { ShoppingBag, Sparkles } from "lucide-react";
 
 type Props = {
   products: Product[];
@@ -11,6 +9,20 @@ type Props = {
   onInc: (id: string, max: number) => void;
   onDec: (id: string) => void;
   onProductClick: (id: string) => void;
+};
+
+const categoryIcons: Record<string, string> = {
+  All: "🍴",
+  Other: "🍴",
+  Drinks: "🥤",
+  Pizza: "🍕",
+  Salads: "🥗",
+  Desserts: "🍰",
+  Electronics: "💻",
+  Fashion: "👕",
+  Home: "🏠",
+  Gadgets: "⌚",
+  Beauty: "💄"
 };
 
 export function ShopPage({ products, cart, onAdd, onInc, onDec, onProductClick }: Props) {
@@ -33,82 +45,77 @@ export function ShopPage({ products, cart, onAdd, onInc, onDec, onProductClick }
   }, [products, curCat, search]);
 
   return (
-    <div className="animate-fade-up pb-[100px] md:pb-10 max-w-[1200px] mx-auto w-full px-4 md:px-0">
-      {/* Premium Hero */}
-      <div className="bg-brand mx-0 my-6 rounded-[40px] overflow-hidden relative shadow-2xl shadow-brand/20 min-h-[220px] flex items-center">
-        {/* Abstract shapes */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-[30%] -left-[10%] w-[80%] h-[150%] rounded-full bg-white/10 blur-[100px]"></div>
-          <div className="absolute -bottom-[20%] -right-[10%] w-[60%] h-[100%] rounded-full bg-orange-400/20 blur-[100px]"></div>
-        </div>
-
-        <div className="w-full p-8 md:p-16 flex flex-col md:flex-row items-center justify-between relative z-10">
-          <div className="flex-1 text-center md:text-left">
-            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-xl border border-white/30 text-white rounded-full px-4 py-2 text-[10px] md:text-xs font-black mb-6 uppercase tracking-widest">
-              <Sparkles size={14} className="animate-pulse" /> Shop the Future
+    <div className="animate-fade-up pb-[100px] md:pb-10 max-w-[1200px] mx-auto w-full px-4 md:px-0 bg-[#faf9f6]">
+      {/* Restored Hero Banner */}
+      <div className="bg-[#111111] mx-0 my-4 rounded-[32px] overflow-hidden relative min-h-[200px] flex items-center p-8">
+         <div className="flex-1">
+            <div className="inline-flex items-center gap-2 bg-[#1a1a1a] border border-green-500/30 text-green-500 rounded-full px-4 py-1.5 text-[10px] font-bold mb-6 uppercase tracking-wider">
+               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div> Kitchen Open
             </div>
-            <h2 className="text-4xl md:text-7xl font-black text-white leading-[1.1] mb-4 tracking-tighter">
-              Quality Meets <br /> <span className="text-orange-200">Affordability.</span>
+            <h2 className="text-3xl md:text-5xl font-black text-white leading-tight mb-2">
+               Craving something <span className="text-[#e8450a]">delicious?</span>
             </h2>
-            <p className="text-base md:text-xl text-white/80 max-w-lg font-bold">
-              Explore thousands of products with express delivery and secure payments.
-            </p>
-          </div>
-          <div className="relative hidden lg:block transform rotate-6 scale-125">
-             <ShoppingBag size={180} className="text-white/20" />
-          </div>
-        </div>
+            <p className="text-sm text-gray-400 font-medium">Order fresh, made just for you</p>
+         </div>
+         <div className="hidden md:block">
+            <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center text-6xl">🍴</div>
+         </div>
       </div>
 
-      {/* Modern Search Bar */}
-      <div className="relative z-20 -mt-10 mx-auto max-w-[95%] md:max-w-[700px]">
-        <div className="flex items-center gap-4 bg-white shadow-2xl shadow-brand/10 border border-line rounded-[24px] px-6 py-1 focus-within:ring-4 focus-within:ring-brand/10 transition-all duration-500">
-          <span className="text-2xl text-brand">🔍</span>
-          <input
-            type="search"
-            placeholder="Search for mobiles, clothes, home and more..."
+      {/* Connection Bar */}
+      <div className="bg-green-50 border border-green-100 rounded-2xl p-4 flex items-center justify-between mb-6">
+         <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+            <span className="text-xs font-bold text-green-700">Store connected</span>
+         </div>
+         <span className="text-[10px] font-bold text-green-500 uppercase">Firebase live</span>
+      </div>
+
+      {/* Search Bar */}
+      <div className="bg-white border border-gray-200 rounded-2xl flex items-center px-4 mb-8 focus-within:border-brand transition-colors shadow-sm">
+         <span className="text-xl">🔍</span>
+         <input 
+            type="text" 
+            placeholder="Search dishes..." 
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 bg-transparent border-0 py-5 text-[16px] font-bold outline-none placeholder:text-gray-400"
-          />
-        </div>
+            onChange={e => setSearch(e.target.value)}
+            className="flex-1 p-4 bg-transparent outline-none font-bold text-sm"
+         />
       </div>
 
-      <div className="mt-12">
-        <CategoryStrip categories={categories} current={curCat} onChange={setCurCat} />
+      {/* Horizontal Categories */}
+      <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar mb-8">
+         {categories.map(cat => (
+            <button 
+               key={cat}
+               onClick={() => setCurCat(cat)}
+               className={`flex flex-col items-center justify-center min-w-[80px] p-4 rounded-3xl border transition-all ${curCat === cat ? 'bg-brand border-brand text-white shadow-lg shadow-brand/20' : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'}`}
+            >
+               <span className="text-2xl mb-2">{categoryIcons[cat] || "🍱"}</span>
+               <span className="text-[10px] font-black uppercase tracking-wider">{cat}</span>
+            </button>
+         ))}
       </div>
 
-      <div className="flex items-center justify-between pb-6 pt-8">
-        <h3 className="text-3xl font-black tracking-tighter flex items-center gap-3">
-          {curCat === "All" ? "🔥 Trending Now" : `📂 ${curCat}`}
-        </h3>
-        <div className="h-px flex-1 mx-6 bg-line hidden sm:block"></div>
-        <span className="text-xs font-black text-muted-text bg-surface-muted px-4 py-2 rounded-full uppercase tracking-widest border border-line">
-          {visible.length} Products
-        </span>
+      <div className="flex items-center gap-3 mb-6">
+         <span className="text-2xl">🔥</span>
+         <h3 className="text-2xl font-black">{curCat === "All" ? "All Items" : curCat}</h3>
       </div>
 
-      {visible.length === 0 ? (
-        <div className="text-center py-32 bg-white rounded-[40px] border border-line shadow-sm">
-          <div className="text-8xl mb-6">🏜️</div>
-          <p className="font-black text-2xl">Nothing here yet!</p>
-          <p className="text-muted-text mt-2 font-bold italic opacity-60">Try searching for something else</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-12">
-          {visible.map((p) => (
-            <ProductCard
-              key={p.id}
-              product={p}
-              qty={cart[p.id] || 0}
-              onAdd={() => onAdd(p.id)}
-              onInc={() => onInc(p.id, p.stock)}
-              onDec={() => onDec(p.id)}
-              onClick={() => onProductClick(p.id)}
+      {/* Product Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+         {visible.map(p => (
+            <ProductCard 
+               key={p.id} 
+               product={p} 
+               qty={cart[p.id] || 0}
+               onAdd={() => onAdd(p.id)}
+               onInc={() => onInc(p.id, p.stock)}
+               onDec={() => onDec(p.id)}
+               onClick={() => onProductClick(p.id)}
             />
-          ))}
-        </div>
-      )}
+         ))}
+      </div>
     </div>
   );
 }

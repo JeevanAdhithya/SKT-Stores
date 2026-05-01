@@ -27,7 +27,7 @@ export function ProfilePage({ user, profile, orders }: Props) {
   const [pwdBusy, setPwdBusy] = useState(false);
 
   const totalSpent = orders
-    .filter((o) => o.status !== "rejected")
+    .filter((o) => o.status !== "cancelled")
     .reduce((s, o) => s + o.total, 0);
 
   const save = async () => {

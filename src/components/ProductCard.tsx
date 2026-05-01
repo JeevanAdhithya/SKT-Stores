@@ -11,89 +11,50 @@ type Props = {
 
 export function ProductCard({ product, qty, onAdd, onInc, onDec, onClick }: Props) {
   const out = product.stock === 0;
-  const low = product.stock > 0 && product.stock <= 5;
-  const stockLabel = out ? "✗ Sold Out" : low ? `⚠ Only ${product.stock}` : "✓ Available";
-  const stockClass = out
-    ? "bg-danger-bg/80 text-danger border-danger/20"
-    : low
-    ? "bg-warn-bg/80 text-warn border-warn/20"
-    : "bg-ok-bg/80 text-ok border-ok/20";
 
   return (
-    <div
+    <div 
       onClick={onClick}
-      className={`group cursor-pointer bg-surface rounded-[20px] border border-line/60 overflow-hidden hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col ${
-        out ? "opacity-75 grayscale-[0.2]" : ""
-      }`}
+      className="bg-white rounded-[32px] border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all flex flex-col cursor-pointer"
     >
-      <div className="w-full aspect-square overflow-hidden relative flex items-center justify-center bg-gradient-to-br from-surface-muted/50 to-line/30 group-hover:from-surface-muted group-hover:to-line/50 transition-colors">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10"></div>
+      <div className="aspect-square bg-gray-50 flex items-center justify-center relative overflow-hidden">
         {product.img ? (
-          <img
-            src={product.img}
-            alt={product.name}
-            loading="lazy"
-            className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110"
-          />
+          <img src={product.img} alt={product.name} className="w-full h-full object-cover" />
         ) : (
-          <div className="relative transform transition-transform duration-500 group-hover:scale-125 group-hover:-rotate-3 group-hover:drop-shadow-xl">
-             <div className="absolute inset-0 bg-brand/20 blur-[30px] rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-             <span className="text-[64px] relative z-10 drop-shadow-md">{product.emoji || "📦"}</span>
-          </div>
+          <span className="text-[80px]">{product.emoji || "📦"}</span>
         )}
         {product.tag && (
-          <span className="absolute top-3 left-3 bg-brand/90 backdrop-blur-md text-brand-fg rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-wider shadow-lg z-20">
+          <span className="absolute top-4 left-4 bg-brand text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">
             {product.tag}
           </span>
         )}
       </div>
-      <div className="p-4 flex flex-col flex-1">
-        <div className="flex-1">
-          <div className="text-[15px] font-extrabold leading-snug mb-1 line-clamp-2 group-hover:text-brand transition-colors">
-            {product.name}
-          </div>
-          <div className="text-[11px] font-semibold text-muted-text/80 mb-2 uppercase tracking-wider">{product.category}</div>
-        </div>
-        
-        <div className="mt-auto">
-          <div className="flex items-end justify-between mb-3">
-            <div className="text-xl font-black text-foreground">
-              <span className="text-brand text-sm mr-0.5">₹</span>{product.price}
-            </div>
-            <div
-              className={`text-[9px] font-extrabold px-2 py-1 rounded-full border ${stockClass}`}
-            >
-              {stockLabel}
-            </div>
-          </div>
 
-          {qty > 0 ? (
-            <div className="flex items-center justify-between bg-surface-muted/50 rounded-xl overflow-hidden border border-line/50 p-1">
-              <button
-                onClick={(e) => { e.stopPropagation(); onDec(); }}
-                className="bg-white dark:bg-black hover:bg-brand hover:text-brand-fg text-foreground w-[36px] h-[36px] rounded-lg text-lg font-black flex items-center justify-center shadow-sm transition-all active:scale-95"
-              >
-                −
-              </button>
-              <span className="text-[16px] font-black w-8 text-center">{qty}</span>
-              <button
-                onClick={(e) => { e.stopPropagation(); onInc(); }}
-                disabled={qty >= product.stock}
-                className="bg-white dark:bg-black hover:bg-brand disabled:hover:bg-white disabled:hover:text-muted-text disabled:opacity-50 hover:text-brand-fg text-foreground w-[36px] h-[36px] rounded-lg text-lg font-black flex items-center justify-center shadow-sm transition-all active:scale-95"
-              >
-                +
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={(e) => { e.stopPropagation(); onAdd(); }}
-              disabled={out}
-              className="w-full bg-surface-muted hover:bg-brand text-foreground hover:text-brand-fg disabled:opacity-50 rounded-xl py-2.5 font-extrabold text-[14px] transition-all active:scale-[0.98] shadow-sm flex items-center justify-center gap-2"
-            >
-              <span className="text-lg leading-none">+</span> Add to Cart
-            </button>
-          )}
+      <div className="p-5 flex flex-col gap-1">
+        <h3 className="text-[17px] font-black text-gray-900 truncate">{product.name}</h3>
+        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{product.category}</p>
+        <div className="text-xl font-black text-brand mb-2">₹{product.price}</div>
+        
+        <div className="flex items-center gap-1.5 mb-4">
+           <div className="w-4 h-4 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-[8px]">✓</div>
+           <span className="text-[10px] font-bold text-green-500 uppercase">Available</span>
         </div>
+
+        {qty > 0 ? (
+          <div className="flex items-center justify-between bg-gray-100 p-1 rounded-2xl">
+            <button onClick={(e) => { e.stopPropagation(); onDec(); }} className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center font-black text-lg active:scale-90 transition-all">−</button>
+            <span className="font-black text-lg">{qty}</span>
+            <button onClick={(e) => { e.stopPropagation(); onInc(); }} className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center font-black text-lg active:scale-90 transition-all">+</button>
+          </div>
+        ) : (
+          <button 
+            onClick={(e) => { e.stopPropagation(); onAdd(); }}
+            disabled={out}
+            className="w-full bg-brand hover:bg-brand-hover text-white py-4 rounded-2xl font-black text-sm transition-all active:scale-95 disabled:opacity-50"
+          >
+            + Add to Cart
+          </button>
+        )}
       </div>
     </div>
   );
