@@ -6,9 +6,10 @@ type Props = {
   onAdd: () => void;
   onInc: () => void;
   onDec: () => void;
+  onClick: () => void;
 };
 
-export function ProductCard({ product, qty, onAdd, onInc, onDec }: Props) {
+export function ProductCard({ product, qty, onAdd, onInc, onDec, onClick }: Props) {
   const out = product.stock === 0;
   const low = product.stock > 0 && product.stock <= 5;
   const stockLabel = out ? "✗ Sold Out" : low ? `⚠ Only ${product.stock}` : "✓ Available";
@@ -20,7 +21,8 @@ export function ProductCard({ product, qty, onAdd, onInc, onDec }: Props) {
 
   return (
     <div
-      className={`group bg-surface rounded-[20px] border border-line/60 overflow-hidden hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col ${
+      onClick={onClick}
+      className={`group cursor-pointer bg-surface rounded-[20px] border border-line/60 overflow-hidden hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col ${
         out ? "opacity-75 grayscale-[0.2]" : ""
       }`}
     >
@@ -68,14 +70,14 @@ export function ProductCard({ product, qty, onAdd, onInc, onDec }: Props) {
           {qty > 0 ? (
             <div className="flex items-center justify-between bg-surface-muted/50 rounded-xl overflow-hidden border border-line/50 p-1">
               <button
-                onClick={onDec}
+                onClick={(e) => { e.stopPropagation(); onDec(); }}
                 className="bg-white dark:bg-black hover:bg-brand hover:text-brand-fg text-foreground w-[36px] h-[36px] rounded-lg text-lg font-black flex items-center justify-center shadow-sm transition-all active:scale-95"
               >
                 −
               </button>
               <span className="text-[16px] font-black w-8 text-center">{qty}</span>
               <button
-                onClick={onInc}
+                onClick={(e) => { e.stopPropagation(); onInc(); }}
                 disabled={qty >= product.stock}
                 className="bg-white dark:bg-black hover:bg-brand disabled:hover:bg-white disabled:hover:text-muted-text disabled:opacity-50 hover:text-brand-fg text-foreground w-[36px] h-[36px] rounded-lg text-lg font-black flex items-center justify-center shadow-sm transition-all active:scale-95"
               >
@@ -84,7 +86,7 @@ export function ProductCard({ product, qty, onAdd, onInc, onDec }: Props) {
             </div>
           ) : (
             <button
-              onClick={onAdd}
+              onClick={(e) => { e.stopPropagation(); onAdd(); }}
               disabled={out}
               className="w-full bg-surface-muted hover:bg-brand text-foreground hover:text-brand-fg disabled:opacity-50 rounded-xl py-2.5 font-extrabold text-[14px] transition-all active:scale-[0.98] shadow-sm flex items-center justify-center gap-2"
             >

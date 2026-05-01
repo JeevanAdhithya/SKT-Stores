@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ProductCard } from "./ProductCard";
 import { CategoryStrip } from "./CategoryStrip";
 import type { Product } from "@/lib/types";
+import { ShoppingBag, Sparkles } from "lucide-react";
 
 type Props = {
   products: Product[];
@@ -9,9 +10,10 @@ type Props = {
   onAdd: (id: string) => void;
   onInc: (id: string, max: number) => void;
   onDec: (id: string) => void;
+  onProductClick: (id: string) => void;
 };
 
-export function ShopPage({ products, cart, onAdd, onInc, onDec }: Props) {
+export function ShopPage({ products, cart, onAdd, onInc, onDec, onProductClick }: Props) {
   const [curCat, setCurCat] = useState("All");
   const [search, setSearch] = useState("");
 
@@ -31,75 +33,69 @@ export function ShopPage({ products, cart, onAdd, onInc, onDec }: Props) {
   }, [products, curCat, search]);
 
   return (
-    <div className="animate-fade-up pb-[100px] md:pb-10 max-w-[1200px] mx-auto w-full">
-      {/* Hero */}
-      <div className="bg-ink mx-3.5 md:mx-0 my-3.5 md:my-6 rounded-[28px] overflow-hidden relative shadow-[0_20px_40px_-15px_rgba(232,69,10,0.3)] min-h-[180px] flex items-center">
-        {/* Animated background blobs */}
+    <div className="animate-fade-up pb-[100px] md:pb-10 max-w-[1200px] mx-auto w-full px-4 md:px-0">
+      {/* Premium Hero */}
+      <div className="bg-brand mx-0 my-6 rounded-[40px] overflow-hidden relative shadow-2xl shadow-brand/20 min-h-[220px] flex items-center">
+        {/* Abstract shapes */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-[30%] -left-[10%] w-[70%] h-[120%] rounded-full bg-brand/20 blur-[80px] animate-pulse"></div>
-          <div className="absolute -bottom-[20%] -right-[10%] w-[60%] h-[100%] rounded-full bg-brand-warm/20 blur-[80px] animate-pulse" style={{animationDelay: '1s'}}></div>
+          <div className="absolute -top-[30%] -left-[10%] w-[80%] h-[150%] rounded-full bg-white/10 blur-[100px]"></div>
+          <div className="absolute -bottom-[20%] -right-[10%] w-[60%] h-[100%] rounded-full bg-orange-400/20 blur-[100px]"></div>
         </div>
 
-        <div className="w-full p-6 md:p-12 flex flex-col md:flex-row items-center justify-between relative z-10 backdrop-blur-[2px] bg-white/[0.02]">
-          <div className="flex-1 text-center md:text-left mb-6 md:mb-0">
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full px-4 py-1.5 text-[10px] md:text-xs font-bold mb-4 shadow-lg uppercase tracking-wider">
-              <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping absolute" />
-              <span className="w-2 h-2 rounded-full bg-blue-400 relative" /> 
-              Store Online
+        <div className="w-full p-8 md:p-16 flex flex-col md:flex-row items-center justify-between relative z-10">
+          <div className="flex-1 text-center md:text-left">
+            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-xl border border-white/30 text-white rounded-full px-4 py-2 text-[10px] md:text-xs font-black mb-6 uppercase tracking-widest">
+              <Sparkles size={14} className="animate-pulse" /> Shop the Future
             </div>
-            <h2 className="text-3xl md:text-6xl font-black text-white leading-tight mb-3 drop-shadow-lg tracking-tight">
-              Premium <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">Collections</span>
+            <h2 className="text-4xl md:text-7xl font-black text-white leading-[1.1] mb-4 tracking-tighter">
+              Quality Meets <br /> <span className="text-orange-200">Affordability.</span>
             </h2>
-            <p className="text-sm md:text-lg text-white/70 max-w-md font-medium">
-              Discover the latest gadgets, fashion, and home essentials at unbeatable prices.
+            <p className="text-base md:text-xl text-white/80 max-w-lg font-bold">
+              Explore thousands of products with express delivery and secure payments.
             </p>
           </div>
-          <div className="relative group perspective-1000 hidden sm:block">
-            <div className="absolute inset-0 bg-gradient-to-tr from-blue-500 to-indigo-300 rounded-full blur-2xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-            <div className="text-[70px] md:text-[110px] relative z-10 transform transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6 drop-shadow-2xl">
-              🛍️
-            </div>
+          <div className="relative hidden lg:block transform rotate-6 scale-125">
+             <ShoppingBag size={180} className="text-white/20" />
           </div>
         </div>
       </div>
 
-      {/* Search */}
-      <div className="px-3.5 md:px-0 pb-6 relative z-20 -mt-6 md:-mt-10 mx-auto max-w-[95%] md:max-w-[600px]">
-        <div className="flex items-center gap-3 bg-white dark:bg-[#1a1a2e] backdrop-blur-xl border border-line/50 shadow-xl rounded-2xl px-5 py-0.5 focus-within:ring-4 focus-within:ring-brand/20 transition-all duration-300">
-          <span className="text-xl text-brand">🔍</span>
+      {/* Modern Search Bar */}
+      <div className="relative z-20 -mt-10 mx-auto max-w-[95%] md:max-w-[700px]">
+        <div className="flex items-center gap-4 bg-white shadow-2xl shadow-brand/10 border border-line rounded-[24px] px-6 py-1 focus-within:ring-4 focus-within:ring-brand/10 transition-all duration-500">
+          <span className="text-2xl text-brand">🔍</span>
           <input
             type="search"
-            placeholder="Search products, brands, and more..."
+            placeholder="Search for mobiles, clothes, home and more..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 bg-transparent border-0 py-3.5 text-[15px] font-semibold outline-none"
+            className="flex-1 bg-transparent border-0 py-5 text-[16px] font-bold outline-none placeholder:text-gray-400"
           />
         </div>
       </div>
 
-      <CategoryStrip categories={categories} current={curCat} onChange={setCurCat} />
+      <div className="mt-12">
+        <CategoryStrip categories={categories} current={curCat} onChange={setCurCat} />
+      </div>
 
-      <div className="flex items-center justify-between px-3.5 md:px-0 pb-4 pt-2">
-        <h3 className="text-2xl md:text-3xl font-black tracking-tight flex items-center gap-2">
-          {curCat === "All" ? (
-             <><span className="text-brand">🔥</span> Popular Items</>
-          ) : (
-            <><span className="text-brand">📂</span> {curCat}</>
-          )}
+      <div className="flex items-center justify-between pb-6 pt-8">
+        <h3 className="text-3xl font-black tracking-tighter flex items-center gap-3">
+          {curCat === "All" ? "🔥 Trending Now" : `📂 ${curCat}`}
         </h3>
-        <span className="text-sm font-semibold text-muted-text bg-surface-muted px-3 py-1 rounded-full">
-          {visible.length} items
+        <div className="h-px flex-1 mx-6 bg-line hidden sm:block"></div>
+        <span className="text-xs font-black text-muted-text bg-surface-muted px-4 py-2 rounded-full uppercase tracking-widest border border-line">
+          {visible.length} Products
         </span>
       </div>
 
       {visible.length === 0 ? (
-        <div className="text-center py-20 text-muted-text px-3.5 bg-surface rounded-[24px] border border-line mx-3.5 md:mx-0 shadow-sm">
-          <div className="text-6xl mb-4 animate-bounce">😕</div>
-          <p className="font-extrabold text-xl">No items found</p>
-          <p className="text-sm mt-2 opacity-70">Try searching for something else</p>
+        <div className="text-center py-32 bg-white rounded-[40px] border border-line shadow-sm">
+          <div className="text-8xl mb-6">🏜️</div>
+          <p className="font-black text-2xl">Nothing here yet!</p>
+          <p className="text-muted-text mt-2 font-bold italic opacity-60">Try searching for something else</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 px-3.5 md:px-0 pb-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-12">
           {visible.map((p) => (
             <ProductCard
               key={p.id}
@@ -108,6 +104,7 @@ export function ShopPage({ products, cart, onAdd, onInc, onDec }: Props) {
               onAdd={() => onAdd(p.id)}
               onInc={() => onInc(p.id, p.stock)}
               onDec={() => onDec(p.id)}
+              onClick={() => onProductClick(p.id)}
             />
           ))}
         </div>

@@ -54,7 +54,7 @@ export function useCart() {
   const remove = useCallback((id: string) => setQty(id, 0), [setQty]);
   const clear = useCallback(() => setAll({}), []);
 
-  const totalQty = Object.values(cart).reduce((a, b) => a + b, 0);
+  const totalQty = Object.values(cart).reduce((a, b) => a + (b > 0 ? b : 0), 0);
 
   return { cart, totalQty, setQty, add, inc, dec, remove, clear };
 }

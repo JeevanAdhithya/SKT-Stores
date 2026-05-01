@@ -2,10 +2,10 @@ type Tab = "shop" | "cart" | "orders" | "profile";
 type Props = { active: Tab; cartCount: number; onChange: (t: Tab) => void };
 
 const items: { id: Tab; ic: string; lb: string }[] = [
-  { id: "shop", ic: "🏪", lb: "Menu" },
+  { id: "shop", ic: "🏪", lb: "Store" },
   { id: "cart", ic: "🛒", lb: "Cart" },
-  { id: "orders", ic: "📦", lb: "Orders" },
-  { id: "profile", ic: "👤", lb: "Profile" },
+  { id: "orders", ic: "📦", lb: "History" },
+  { id: "profile", ic: "👤", lb: "Me" },
 ];
 
 export function BottomNav({ active, cartCount, onChange }: Props) {

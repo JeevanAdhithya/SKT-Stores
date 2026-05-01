@@ -24,6 +24,8 @@ export async function placeOrder(order: Order, products: Product[]) {
     total: order.total,
     status: order.status,
     delivery_address: order.deliveryAddress,
+    payment_method: order.paymentMethod,
+    transaction_id: order.transactionId,
   });
 
   if (orderError) throw orderError;

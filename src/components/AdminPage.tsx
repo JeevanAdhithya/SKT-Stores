@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { showToast } from "@/components/Toast";
-import { Plus, Package, ShoppingBag, Trash2, Edit2, X, Upload, Link as LinkIcon, CheckCircle, XCircle } from "lucide-react";
+import { Plus, Package, ShoppingBag, Trash2, Edit2, X, Upload, Link as LinkIcon, CheckCircle, XCircle, Settings, QrCode } from "lucide-react";
+import { getStoreSettings, updateStoreSettings } from "@/lib/settings";
 
 const ADMIN_EMAIL = 'sktstores37@gmail.com';
 
@@ -9,10 +10,11 @@ export function AdminPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'inventory' | 'add' | 'completed'>('inventory');
+  const [activeTab, setActiveTab] = useState<'inventory' | 'orders' | 'settings'>('inventory');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [imageType, setImageType] = useState<'url' | 'upload'>('url');
+  const [storeSettings, setStoreSettings] = useState({ upi_id: '', qr_url: '' });
   
   const [formData, setFormData] = useState({
     id: '', name: '', category: 'Electronics', price: 0, stock: 0, 
@@ -21,6 +23,7 @@ export function AdminPage() {
 
   useEffect(() => {
     fetchData();
+    getStoreSettings().then(setStoreSettings);
   }, []);
 
   const fetchData = async () => {
@@ -54,13 +57,13 @@ export function AdminPage() {
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: 'product' | 'qr') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `products/${fileName}`;
+    const filePath = `${target === 'product' ? 'products' : 'settings'}/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('images')
@@ -75,14 +78,22 @@ export function AdminPage() {
       .from('images')
       .getPublicUrl(filePath);
 
-    setFormData({ ...formData, img: publicUrl });
+    if (target === 'product') {
+      setFormData({ ...formData, img: publicUrl });
+    } else {
+      setStoreSettings({ ...storeSettings, qr_url: publicUrl });
+      await updateStoreSettings({ qr_url: publicUrl });
+    }
     showToast("Image uploaded!", "green");
   };
 
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase.from('orders').update({ status }).eq('id', id);
     if (error) showToast(error.message, "red");
-    else fetchData();
+    else {
+      showToast(`Order marked as ${status}`, "green");
+      fetchData();
+    }
   };
 
   const openEdit = (p: any) => {
@@ -96,42 +107,40 @@ export function AdminPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50/50">
-      {/* Simplified Sidebar */}
+      {/* Enhanced Sidebar */}
       <aside className="w-64 bg-white border-r border-gray-100 p-6 flex flex-col gap-8">
         <div>
           <h2 className="text-2xl font-black text-brand">SKT Admin</h2>
-          <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest mt-1">Management Portal</p>
+          <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest mt-1">Flipkart Style Portal</p>
         </div>
         
         <nav className="flex flex-col gap-2">
-          <button 
-            onClick={() => setActiveTab('inventory')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-bold transition-all ${activeTab === 'inventory' ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-gray-500 hover:bg-gray-50'}`}
-          >
-            <Package size={20} /> Inventory
-          </button>
-          <button 
-            onClick={() => { setEditingId(null); setFormData({id:'', name:'', category:'Electronics', price:0, stock:0, emoji:'📦', tag:'', img:''}); setModalOpen(true); }}
-            className="flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-gray-500 hover:bg-gray-50 transition-all"
-          >
-            <Plus size={20} /> Add Product
-          </button>
-          <button 
-            onClick={() => setActiveTab('completed')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-bold transition-all ${activeTab === 'completed' ? 'bg-green-500 text-white shadow-lg shadow-green-500/20' : 'text-gray-500 hover:bg-gray-50'}`}
-          >
-            <CheckCircle size={20} /> Completed
-          </button>
+          <NavItem active={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')} icon={<Package size={20} />} label="Inventory" />
+          <NavItem active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} icon={<ShoppingBag size={20} />} label="Orders" badge={orders.filter(o => o.status === 'pending').length} />
+          <NavItem active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} icon={<Settings size={20} />} label="Store Settings" />
+          <div className="mt-4 pt-4 border-t border-gray-50">
+            <button 
+              onClick={() => { setEditingId(null); setFormData({id:'', name:'', category:'Electronics', price:0, stock:0, emoji:'📦', tag:'', img:''}); setModalOpen(true); }}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold bg-brand text-white shadow-lg shadow-brand/20 hover:scale-[1.02] active:scale-95 transition-all"
+            >
+              <Plus size={20} /> Add Product
+            </button>
+          </div>
         </nav>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 p-8">
+      {/* Main Content Area */}
+      <main className="flex-1 p-8 overflow-y-auto">
         {activeTab === 'inventory' && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <header className="mb-8">
-              <h1 className="text-3xl font-black">Product Inventory</h1>
-              <p className="text-gray-500">Manage your active listings and stock</p>
+          <div className="animate-fade-up">
+            <header className="mb-8 flex justify-between items-end">
+              <div>
+                <h1 className="text-3xl font-black">Catalog Management</h1>
+                <p className="text-gray-500">Manage products, stock and visibility</p>
+              </div>
+              <div className="bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm text-xs font-bold text-gray-400 uppercase tracking-wider">
+                {products.length} Total Products
+              </div>
             </header>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -153,53 +162,131 @@ export function AdminPage() {
                       <button onClick={async () => { if(confirm("Delete?")) await supabase.from('products').delete().eq('id', p.id); fetchData(); }} className="p-2 hover:bg-red-50 text-red-500 rounded-xl transition-colors"><Trash2 size={18} /></button>
                     </div>
                   </div>
+                  <div className={`mt-3 text-[10px] font-black uppercase tracking-widest ${p.stock > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {p.stock > 0 ? `${p.stock} in stock` : 'Out of stock'}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {activeTab === 'completed' && (
-          <div className="animate-in fade-in duration-500">
+        {activeTab === 'orders' && (
+          <div className="animate-fade-up">
             <header className="mb-8">
-              <h1 className="text-3xl font-black">Completed Orders</h1>
-              <p className="text-gray-500">Archive of successful deliveries</p>
+              <h1 className="text-3xl font-black">Order Requests</h1>
+              <p className="text-gray-500">Track and fulfill customer orders</p>
             </header>
             
-            <div className="bg-white rounded-[32px] border border-gray-100 overflow-hidden shadow-sm">
-              <table className="w-full text-left">
-                <thead className="bg-gray-50/50">
-                  <tr className="text-[10px] font-black uppercase text-gray-400 tracking-widest">
-                    <th className="p-6">Order ID</th>
-                    <th className="p-6">Customer</th>
-                    <th className="p-6">Items</th>
-                    <th className="p-6">Total</th>
-                    <th className="p-6">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {orders.filter(o => o.status === 'delivered').map(o => (
-                    <tr key={o.id} className="hover:bg-gray-50/30 transition-colors">
-                      <td className="p-6 font-mono text-[10px] text-gray-400">#{o.id.slice(0,8)}</td>
-                      <td className="p-6">
-                        <div className="font-bold">{o.customer_name}</div>
-                        <div className="text-[10px] text-gray-400">{o.customer_email}</div>
-                      </td>
-                      <td className="p-6 text-xs text-gray-500">{o.items.length} items</td>
-                      <td className="p-6 font-black text-green-600">₹{o.total_amount}</td>
-                      <td className="p-6">
-                        <span className="bg-green-100 text-green-700 text-[10px] font-black px-3 py-1 rounded-full uppercase">Success</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-4">
+              {orders.map(o => (
+                <div key={o.id} className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm">
+                  <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
+                    <div>
+                      <div className="flex items-center gap-3 mb-1">
+                        <span className="font-mono text-xs text-gray-400">#{o.id.slice(0,8)}</span>
+                        <StatusBadge status={o.status} />
+                      </div>
+                      <h3 className="text-xl font-black">{o.customer_name}</h3>
+                      <p className="text-sm text-gray-500">{o.customer_phone} · {o.payment_method?.toUpperCase()}</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-black text-brand">₹{o.total_amount}</div>
+                      <div className="text-xs text-gray-400">{new Date(o.created_at).toLocaleString()}</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50/50 rounded-2xl p-4 mb-4">
+                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Order Items</div>
+                    <div className="space-y-2">
+                      {o.items.map((it: any, i: number) => (
+                        <div key={i} className="text-sm font-bold flex justify-between">
+                          <span>{it.name} × {it.qty}</span>
+                          <span>₹{it.price * it.qty}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {o.payment_method === 'online' && (
+                    <div className="bg-brand/5 border border-brand/10 rounded-2xl p-4 mb-4">
+                      <div className="flex justify-between items-center mb-1">
+                        <div className="text-[10px] font-black text-brand uppercase tracking-widest">Transaction ID / UTR</div>
+                        <div className="text-[10px] font-black text-brand uppercase tracking-widest">Verified Payment Required</div>
+                      </div>
+                      <div className="font-mono font-black text-brand text-lg">{o.transaction_id || 'NOT PROVIDED'}</div>
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {o.status === 'pending' && (
+                      <>
+                        <button onClick={() => updateStatus(o.id, 'confirmed')} className="bg-brand text-white px-6 py-2 rounded-xl font-bold text-sm shadow-lg shadow-brand/20 transition-all hover:scale-105">Confirm Order</button>
+                        <button onClick={() => updateStatus(o.id, 'cancelled')} className="bg-gray-100 text-gray-500 px-6 py-2 rounded-xl font-bold text-sm hover:bg-red-50 hover:text-red-500 transition-all">Cancel</button>
+                      </>
+                    )}
+                    {o.status === 'confirmed' && (
+                      <button onClick={() => updateStatus(o.id, 'delivered')} className="bg-green-500 text-white px-6 py-2 rounded-xl font-bold text-sm shadow-lg shadow-green-500/20 transition-all hover:scale-105">Mark as Delivered</button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'settings' && (
+          <div className="animate-fade-up max-w-2xl">
+            <header className="mb-8">
+              <h1 className="text-3xl font-black">Store Settings</h1>
+              <p className="text-gray-500">Configure payments and store-wide details</p>
+            </header>
+
+            <div className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm space-y-8">
+              <div className="space-y-4">
+                <h3 className="text-lg font-black flex items-center gap-2">
+                  <CreditCard size={20} className="text-brand" /> Payment Details
+                </h3>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Merchant UPI ID</label>
+                  <input 
+                    placeholder="yourname@upi" 
+                    value={storeSettings.upi_id} 
+                    onChange={e => setStoreSettings({...storeSettings, upi_id: e.target.value})} 
+                    className="w-full bg-gray-50 p-4 rounded-2xl font-bold border-0 focus:ring-2 focus:ring-brand outline-none"
+                  />
+                </div>
+                
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Payment QR Code</label>
+                  <div className="flex items-center gap-6">
+                    <div className="w-32 h-32 bg-gray-50 border-2 border-dashed border-gray-200 rounded-3xl flex items-center justify-center overflow-hidden">
+                      {storeSettings.qr_url ? (
+                        <img src={storeSettings.qr_url} className="w-full h-full object-contain" />
+                      ) : (
+                        <QrCode className="text-gray-300" size={32} />
+                      )}
+                    </div>
+                    <label className="bg-white border border-line px-6 py-3 rounded-2xl font-bold text-sm hover:bg-gray-50 cursor-pointer transition-all">
+                      Upload QR
+                      <input type="file" className="hidden" onChange={e => handleImageUpload(e, 'qr')} accept="image/*" />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                onClick={async () => { await updateStoreSettings(storeSettings); showToast("Settings saved!", "green"); }}
+                className="w-full bg-brand text-white py-5 rounded-[24px] font-black text-lg shadow-xl shadow-brand/30 transition-all active:scale-95"
+              >
+                Save Store Settings
+              </button>
             </div>
           </div>
         )}
       </main>
 
-      {/* Product Modal with Dual Image Option */}
+      {/* Product Modal */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[1000] flex items-center justify-center p-4">
           <div className="bg-white rounded-[40px] w-full max-w-xl p-10 shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
@@ -240,7 +327,7 @@ export function AdminPage() {
                   <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-2xl p-6 hover:border-brand hover:bg-brand/5 cursor-pointer transition-all">
                     <Upload className="text-gray-400 mb-2" />
                     <span className="text-sm font-bold text-gray-500">Click to upload image</span>
-                    <input type="file" className="hidden" onChange={handleImageUpload} accept="image/*" />
+                    <input type="file" className="hidden" onChange={e => handleImageUpload(e, 'product')} accept="image/*" />
                     {formData.img && <span className="mt-2 text-[10px] text-green-600 font-bold">✓ Ready</span>}
                   </label>
                 )}
@@ -279,4 +366,27 @@ export function AdminPage() {
       )}
     </div>
   );
+}
+
+function NavItem({ active, onClick, icon, label, badge }: any) {
+  return (
+    <button 
+      onClick={onClick}
+      className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-bold transition-all relative ${active ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-gray-500 hover:bg-gray-50'}`}
+    >
+      {icon}
+      <span>{label}</span>
+      {badge ? <span className="absolute -top-1 -right-1 bg-brand text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm">{badge}</span> : null}
+    </button>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const styles: any = {
+    pending: 'bg-yellow-100 text-yellow-700',
+    confirmed: 'bg-blue-100 text-blue-700',
+    cancelled: 'bg-red-100 text-red-700',
+    delivered: 'bg-green-100 text-green-700'
+  };
+  return <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest ${styles[status] || 'bg-gray-100'}`}>{status}</span>;
 }

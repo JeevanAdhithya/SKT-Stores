@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Header } from "@/components/Header";
 import { TopNav } from "@/components/TopNav";
 import { BottomNav } from "@/components/BottomNav";
 import { ShopPage } from "@/components/ShopPage";
 import { CartPage } from "@/components/CartPage";
 import { OrdersPage } from "@/components/OrdersPage";
 import { ProfilePage } from "@/components/ProfilePage";
+import { ProductDetailPage } from "@/components/ProductDetailPage";
 import { SuccessModal } from "@/components/SuccessModal";
 import { Toast, showToast } from "@/components/Toast";
 import { Loader } from "@/components/Loader";
@@ -28,11 +28,17 @@ function Index() {
   const navigate = useNavigate();
   const { user, profile, loading: authLoading } = useAuth();
   const { products } = useProducts();
-  const { cart, totalQty, add, inc, dec, remove, clear } = useCart();
+  const { cart, add, inc, dec, remove, clear } = useCart();
   const { orders, loading: ordersLoading } = useMyOrders(user?.uid);
   const [tab, setTab] = useState<Tab>("shop");
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [successId, setSuccessId] = useState<string | null>(null);
+
+  const realTotalQty = Object.entries(cart).reduce((sum, [id, qty]) => {
+    const exists = products.find(p => p.id === id);
+    return exists ? sum + qty : sum;
+  }, 0);
 
   useEffect(() => {
     if (!authLoading && !user) navigate({ to: "/auth" });
@@ -61,11 +67,20 @@ function Index() {
     inc(id, max);
   };
 
+  const onBuyNow = (id: string) => {
+    const p = products.find((x) => x.id === id);
+    if (!p || p.stock === 0) return;
+    if (!cart[id]) add(id);
+    setSelectedProductId(null);
+    setTab("cart");
+  };
+
   const handlePlace = async ({
-    items, subtotal, tax, delivery, total, note, phone, deliveryAddress, saveAsDefault,
+    items, subtotal, tax, delivery, total, note, phone, deliveryAddress, saveAsDefault, paymentMethod, transactionId
   }: {
     items: CartItem[]; subtotal: number; tax: number; delivery: number; total: number;
     note: string; phone: string; deliveryAddress: DeliveryAddress; saveAsDefault: boolean;
+    paymentMethod: "cod" | "online"; transactionId?: string;
   }) => {
     if (items.length === 0) return;
     setSubmitting(true);
@@ -86,6 +101,8 @@ function Index() {
           status: "pending",
           createdAt: new Date().toISOString(),
           deliveryAddress,
+          paymentMethod,
+          transactionId,
         },
         products,
       );
@@ -108,36 +125,48 @@ function Index() {
     }
   };
 
+  const selectedProduct = products.find(p => p.id === selectedProductId);
+
+  const renderContent = () => {
+    if (selectedProduct) {
+      return (
+        <ProductDetailPage 
+          product={selectedProduct} 
+          qtyInCart={cart[selectedProduct.id] || 0}
+          onAdd={onAdd}
+          onInc={onInc}
+          onDec={dec}
+          onBack={() => setSelectedProductId(null)}
+          onBuyNow={onBuyNow}
+        />
+      );
+    }
+
+    switch (tab) {
+      case "shop": return <ShopPage products={products} cart={cart} onAdd={onAdd} onInc={onInc} onDec={dec} onProductClick={setSelectedProductId} />;
+      case "cart": return (
+        <CartPage cart={cart} products={products} profile={profile}
+          onInc={onInc} onDec={dec} onRemove={remove}
+          onClear={() => { if (Object.keys(cart).length && confirm("Clear cart?")) clear(); }}
+          onPlace={handlePlace} onBrowse={() => setTab("shop")} />
+      );
+      case "orders": return <OrdersPage orders={orders} loading={ordersLoading} onBrowse={() => setTab("shop")} />;
+      case "profile": return <ProfilePage user={user} profile={profile} orders={orders} />;
+      default: return null;
+    }
+  };
+
   return (
     <div className="min-h-dvh bg-background overflow-x-hidden">
-      <TopNav active={tab} cartCount={totalQty} name={profile.name} email={profile.email} onChange={setTab} />
+      <TopNav active={tab} cartCount={realTotalQty} name={profile.name} email={profile.email} onChange={(t) => { setSelectedProductId(null); setTab(t); }} />
       
       <main className="md:px-6 md:py-2">
-        <div className="md:hidden max-w-[430px] mx-auto">
-          {tab === "shop" && <ShopPage products={products} cart={cart} onAdd={onAdd} onInc={onInc} onDec={dec} />}
-          {tab === "cart" && (
-            <CartPage cart={cart} products={products} profile={profile}
-              onInc={onInc} onDec={dec} onRemove={remove}
-              onClear={() => { if (Object.keys(cart).length && confirm("Clear cart?")) clear(); }}
-              onPlace={handlePlace} onBrowse={() => setTab("shop")} />
-          )}
-          {tab === "orders" && <OrdersPage orders={orders} loading={ordersLoading} onBrowse={() => setTab("shop")} />}
-          {tab === "profile" && <ProfilePage user={user} profile={profile} orders={orders} />}
-        </div>
-        <div className="hidden md:block">
-          {tab === "shop" && <ShopPage products={products} cart={cart} onAdd={onAdd} onInc={onInc} onDec={dec} />}
-          {tab === "cart" && (
-            <CartPage cart={cart} products={products} profile={profile}
-              onInc={onInc} onDec={dec} onRemove={remove}
-              onClear={() => { if (Object.keys(cart).length && confirm("Clear cart?")) clear(); }}
-              onPlace={handlePlace} onBrowse={() => setTab("shop")} />
-          )}
-          {tab === "orders" && <OrdersPage orders={orders} loading={ordersLoading} onBrowse={() => setTab("shop")} />}
-          {tab === "profile" && <ProfilePage user={user} profile={profile} orders={orders} />}
+        <div className="max-w-[1200px] mx-auto">
+          {renderContent()}
         </div>
       </main>
 
-      <BottomNav active={tab} cartCount={totalQty} onChange={setTab} />
+      <BottomNav active={tab} cartCount={realTotalQty} onChange={(t) => { setSelectedProductId(null); setTab(t); }} />
 
       {submitting && <Loader msg="Sending your order..." />}
       {successId && (

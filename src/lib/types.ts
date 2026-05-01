@@ -18,7 +18,7 @@ export type CartItem = {
   img: string;
 };
 
-export type OrderStatus = "pending" | "accepted" | "completed" | "rejected";
+export type OrderStatus = "pending" | "confirmed" | "cancelled" | "delivered";
 
 export type DeliveryAddress = {
   address: string;
@@ -41,6 +41,13 @@ export type Order = {
   status: OrderStatus;
   createdAt: string;
   deliveryAddress: DeliveryAddress;
+  paymentMethod: "cod" | "online";
+  transactionId?: string;
+};
+
+export type StoreSettings = {
+  upi_id: string;
+  qr_url: string;
 };
 
 export type UserProfile = {
