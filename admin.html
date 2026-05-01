@@ -139,20 +139,52 @@
         const SITE_URL = 'https://sktstores.vercel.app/auth';
 
         const client = supabase.createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-        let products = [];
-
-        // --- AUTH (Simple protection) ---
+        let productsCache = null; 
         let isAdmin = false;
-        const pass = localStorage.getItem('admin_pass') || prompt("Enter Admin Password:");
-        if (pass === "admin123") { 
-            localStorage.setItem('admin_pass', 'admin123');
-            isAdmin = true;
-        } else {
-            document.body.innerHTML = "<div class='h-screen flex items-center justify-center font-black text-2xl flex-col gap-4'>Access Denied <button onclick='location.reload()' class='text-sm bg-orange-500 text-white px-4 py-2 rounded-xl'>Try Again</button></div>";
+
+        // --- AUTH & SESSION ---
+        async function checkSession() {
+            const { data: { session } } = await client.auth.getSession();
+            if (session) {
+                isAdmin = true;
+                showDashboard();
+            } else {
+                handleInitialLogin();
+            }
         }
 
-        // --- INITIAL FETCH ---
-        async function loadProducts() {
+        function handleInitialLogin() {
+            const pass = localStorage.getItem('admin_pass') || prompt("Enter Admin Password:");
+            if (pass === "admin123") {
+                localStorage.setItem('admin_pass', "admin123");
+                isAdmin = true;
+                showDashboard();
+            } else {
+                document.body.innerHTML = "<div class='h-screen flex items-center justify-center font-black text-2xl flex-col gap-4'>Access Denied <button onclick='location.reload()' class='text-sm bg-orange-500 text-white px-4 py-2 rounded-xl'>Try Again</button></div>";
+            }
+        }
+
+        async function signInWithGoogle() {
+            const { error } = await client.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: SITE_URL }
+            });
+            if (error) alert('Error: ' + error.message);
+        }
+
+        function showDashboard() {
+            loadProducts();
+        }
+
+        window.onload = checkSession;
+
+        // --- DATA CACHING ---
+        async function loadProducts(forceRefresh = false) {
+            if (productsCache && !forceRefresh) {
+                renderProducts(productsCache);
+                return;
+            }
+
             const { data, error } = await client
                 .from('products')
                 .select('*')
@@ -164,17 +196,10 @@
                 return;
             }
 
-            products = data;
-            renderProducts();
+            productsCache = data;
+            renderProducts(data);
             updateStats();
         }
-
-        function renderProducts() {
-            const list = document.getElementById('product-list');
-            if (products.length === 0) {
-                list.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-gray-400 font-medium">No products found. Add your first one!</td></tr>`;
-                return;
-            }
 
             list.innerHTML = products.map(p => `
                 <tr class="hover:bg-gray-50/50 transition-colors">
