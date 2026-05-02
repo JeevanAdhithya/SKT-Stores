@@ -23,13 +23,13 @@ export function TopNav({ active, cartCount, name, email, onChange }: Props) {
   const displayName = name ? name.toUpperCase() : "PROFILE";
 
   return (
-    <header className="sticky top-0 z-[100] bg-white/95 backdrop-blur-md border-b border-gray-100 w-full shadow-sm">
-      <div className="flex items-center w-full px-4 md:px-8 py-2 gap-3">
+    <header className="sticky top-0 z-[100] bg-white/95 backdrop-blur-md border-b border-gray-100 w-full shadow-md">
+      <div className="flex items-center w-full px-6 md:px-12 py-4 gap-6">
 
         {/* Logo — left */}
         <button
           onClick={() => onChange("shop")}
-          className="text-lg md:text-xl font-black text-[#e8450a] tracking-tighter flex-shrink-0 hover:opacity-80 transition-opacity"
+          className="text-xl md:text-2xl font-black text-[#e8450a] tracking-tight flex-shrink-0 hover:opacity-80 transition-opacity"
         >
           SKT Stores
         </button>
@@ -54,18 +54,18 @@ export function TopNav({ active, cartCount, name, email, onChange }: Props) {
           {/* Profile chip */}
           <button
             onClick={() => onChange("profile")}
-            className={`flex items-center gap-2 rounded-full px-3 py-1.5 border transition-all duration-200 ${
+            className={`flex items-center gap-2.5 rounded-full px-4 py-2 border transition-all duration-200 ${
               active === "profile"
-                ? "bg-brand border-brand text-white shadow-sm shadow-brand/20"
+                ? "bg-brand border-brand text-white shadow-md shadow-brand/20"
                 : "bg-[#f4f7f9] border-[#e4e9ed] hover:bg-gray-100 hover:border-gray-200"
             }`}
           >
-            <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black transition-all ${
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black transition-all ${
               active === "profile" ? "bg-white text-brand" : "bg-brand text-white shadow-sm"
             }`}>
               {displayName.charAt(0)}
             </div>
-            <span className={`text-[9px] font-black tracking-[0.15em] hidden md:block ${
+            <span className={`text-[11px] font-bold tracking-wider hidden md:block ${
               active === "profile" ? "text-white" : "text-gray-800"
             }`}>
               {displayName}
@@ -75,15 +75,15 @@ export function TopNav({ active, cartCount, name, email, onChange }: Props) {
           {/* Cart icon button — after account name */}
           <button
             onClick={() => onChange("cart")}
-            className={`relative flex items-center justify-center w-8 h-8 rounded-full border transition-all duration-200 hover:scale-105 active:scale-95 ${
+            className={`relative flex items-center justify-center w-11 h-11 rounded-full border transition-all duration-200 hover:scale-105 active:scale-95 ${
               active === "cart"
-                ? "bg-brand border-brand text-white shadow-sm shadow-brand/20"
+                ? "bg-brand border-brand text-white shadow-md shadow-brand/20"
                 : "bg-[#f4f7f9] border-[#e4e9ed] text-gray-600 hover:bg-brand hover:border-brand hover:text-white"
             }`}
           >
-            <ShoppingCart size={15} strokeWidth={2.5} />
+            <ShoppingCart size={18} strokeWidth={2.5} />
             {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-brand text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm leading-none">
+              <span className="absolute -top-1 -right-1 bg-brand text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm leading-none">
                 {cartCount > 9 ? "9+" : cartCount}
               </span>
             )}
@@ -113,9 +113,9 @@ function NavBtn({ label, icon, active, onClick, badge }: {
   return (
     <button
       onClick={onClick}
-      className={`relative flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-black tracking-[0.1em] transition-all duration-200 group ${
+      className={`relative flex items-center gap-2 px-4 py-2.5 rounded-full text-[12px] font-bold tracking-wide transition-all duration-200 group ${
         active
-          ? "bg-brand text-white shadow-sm shadow-brand/20"
+          ? "bg-brand text-white shadow-md shadow-brand/20"
           : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
       }`}
     >
@@ -124,7 +124,7 @@ function NavBtn({ label, icon, active, onClick, badge }: {
       </span>
       <span>{label.toUpperCase()}</span>
       {badge != null && badge > 0 && (
-        <span className={`absolute -top-1 -right-1 text-[8px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center border border-white leading-none ${
+        <span className={`absolute -top-1 -right-1 text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border-2 border-white leading-none ${
           active ? "bg-white text-brand" : "bg-brand text-white"
         }`}>
           {badge}
