@@ -130,14 +130,24 @@ export function CartPage({
   };
 
   return (
-    <div className="animate-fade-up pb-[100px] md:pb-10 max-w-[1100px] mx-auto w-full px-4">
+    <div className="animate-fade-up pb-[100px] md:pb-10 w-full px-6 md:px-10">
       {step === 'details' ? (
         <>
-          <div className="py-6 flex justify-between items-center mb-1">
-            <h2 className="text-2xl font-black text-foreground">Checkout Details</h2>
-            <button onClick={onClear} className="text-muted-text text-sm hover:text-brand transition-colors">
-              Clear Cart
+          <div className="py-6 mb-1">
+            {/* Back Button */}
+            <button
+              onClick={onBrowse}
+              className="group flex items-center gap-2 bg-white border border-gray-100 px-5 py-2.5 rounded-full shadow-sm hover:shadow-md hover:border-brand/30 transition-all active:scale-95 mb-6"
+            >
+              <ArrowLeft size={18} className="text-brand group-hover:-translate-x-1 transition-transform" />
+              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 group-hover:text-brand">Continue Shopping</span>
             </button>
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-black text-foreground">Checkout Details</h2>
+              <button onClick={onClear} className="text-muted-text text-sm hover:text-brand transition-colors">
+                Clear Cart
+              </button>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-12 gap-8">

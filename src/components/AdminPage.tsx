@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { showToast } from "@/components/Toast";
-import { Plus, Package, ShoppingBag, Trash2, Edit2, X, Upload, Link as LinkIcon, CheckCircle, XCircle, Settings, QrCode, CreditCard } from "lucide-react";
+import { Plus, Package, ShoppingBag, Trash2, Edit2, X, Upload, Link as LinkIcon, CheckCircle, XCircle, Settings, QrCode, CreditCard, User, Phone, MapPin, Receipt, FileText, ChevronRight } from "lucide-react";
 import { getStoreSettings, updateStoreSettings } from "@/lib/settings";
 
 const ADMIN_EMAIL = 'sktstores37@gmail.com';
@@ -12,6 +12,8 @@ export function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'inventory' | 'orders' | 'settings'>('inventory');
   const [modalOpen, setModalOpen] = useState(false);
+  const [orderModalOpen, setOrderModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [imageType, setImageType] = useState<'url' | 'upload'>('url');
   const [storeSettings, setStoreSettings] = useState({ upi_id: '', qr_url: '' });
@@ -61,30 +63,39 @@ export function AdminPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    showToast("Uploading image...", "blue");
+    
     const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
     const filePath = `${target === 'product' ? 'products' : 'settings'}/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('images')
-      .upload(filePath, file);
+    try {
+      if (file.size > 5 * 1024 * 1024) {
+        showToast("File too large (max 5MB)", "red");
+        return;
+      }
 
-    if (uploadError) {
-      showToast("Upload failed: " + uploadError.message, "red");
-      return;
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true 
+        });
+
+      if (uploadError) throw new Error(uploadError.message);
+
+      const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(filePath);
+
+      if (target === 'product') {
+        setFormData(prev => ({ ...prev, img: publicUrl }));
+      } else {
+        setStoreSettings(prev => ({ ...prev, qr_url: publicUrl }));
+        await updateStoreSettings({ qr_url: publicUrl });
+      }
+      showToast("Image uploaded successfully!", "green");
+    } catch (error: any) {
+      showToast("Upload failed: " + (error.message || "Please try again"), "red");
     }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('images')
-      .getPublicUrl(filePath);
-
-    if (target === 'product') {
-      setFormData({ ...formData, img: publicUrl });
-    } else {
-      setStoreSettings({ ...storeSettings, qr_url: publicUrl });
-      await updateStoreSettings({ qr_url: publicUrl });
-    }
-    showToast("Image uploaded!", "green");
   };
 
   const updateStatus = async (id: string, status: string) => {
@@ -92,8 +103,16 @@ export function AdminPage() {
     if (error) showToast(error.message, "red");
     else {
       showToast(`Order marked as ${status}`, "green");
+      if (selectedOrder?.id === id) {
+        setSelectedOrder((prev: any) => ({ ...prev, status }));
+      }
       fetchData();
     }
+  };
+
+  const openOrderDetails = (order: any) => {
+    setSelectedOrder(order);
+    setOrderModalOpen(true);
   };
 
   const openEdit = (p: any) => {
@@ -106,12 +125,12 @@ export function AdminPage() {
   if (loading) return <div className="p-10 text-center">Loading Admin Panel...</div>;
 
   return (
-    <div className="flex min-h-screen bg-gray-50/50">
+    <div className="flex min-h-screen bg-gray-50/50 font-sans text-gray-900">
       {/* Enhanced Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-100 p-6 flex flex-col gap-8">
+      <aside className="w-64 bg-white border-r border-gray-100 p-6 flex flex-col gap-8 sticky top-0 h-screen">
         <div>
-          <h2 className="text-2xl font-black text-brand">SKT Admin</h2>
-          <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest mt-1">Flipkart Style Portal</p>
+          <h2 className="text-2xl font-black text-brand tracking-tighter">SKT Admin</h2>
+          <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest mt-1">E-Commerce Management</p>
         </div>
         
         <nav className="flex flex-col gap-2">
@@ -135,10 +154,10 @@ export function AdminPage() {
           <div className="animate-fade-up">
             <header className="mb-8 flex justify-between items-end">
               <div>
-                <h1 className="text-3xl font-black">Catalog Management</h1>
-                <p className="text-gray-500">Manage products, stock and visibility</p>
+                <h1 className="text-3xl font-black tracking-tight">Catalog Management</h1>
+                <p className="text-gray-500 font-medium">Manage products, stock and visibility</p>
               </div>
-              <div className="bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm text-xs font-bold text-gray-400 uppercase tracking-wider">
+              <div className="bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm text-xs font-black text-gray-400 uppercase tracking-widest">
                 {products.length} Total Products
               </div>
             </header>
@@ -174,62 +193,43 @@ export function AdminPage() {
         {activeTab === 'orders' && (
           <div className="animate-fade-up">
             <header className="mb-8">
-              <h1 className="text-3xl font-black">Order Requests</h1>
-              <p className="text-gray-500">Track and fulfill customer orders</p>
+              <h1 className="text-3xl font-black tracking-tight">Order Requests</h1>
+              <p className="text-gray-500 font-medium">Track and fulfill customer orders</p>
             </header>
             
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4">
               {orders.map(o => (
-                <div key={o.id} className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm">
-                  <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
+                <button 
+                  key={o.id} 
+                  onClick={() => openOrderDetails(o)}
+                  className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-md transition-all text-left flex items-center justify-between group"
+                >
+                  <div className="flex items-center gap-6">
+                    <div className="w-16 h-16 bg-[#f4f7f9] rounded-2xl flex items-center justify-center text-2xl shadow-inner group-hover:bg-brand/5 transition-colors">
+                      {o.status === 'pending' ? '⏳' : o.status === 'confirmed' ? '✅' : o.status === 'delivered' ? '📦' : '❌'}
+                    </div>
                     <div>
                       <div className="flex items-center gap-3 mb-1">
-                        <span className="font-mono text-xs text-gray-400">#{o.id.slice(0,8)}</span>
+                        <span className="font-mono text-[10px] font-black text-gray-300 uppercase tracking-widest">#{o.id.slice(-8).toUpperCase()}</span>
                         <StatusBadge status={o.status} />
                       </div>
-                      <h3 className="text-xl font-black">{o.customer_name}</h3>
-                      <p className="text-sm text-gray-500">{o.customer_phone} · {o.payment_method?.toUpperCase()}</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-black text-brand">₹{o.total_amount}</div>
-                      <div className="text-xs text-gray-400">{new Date(o.created_at).toLocaleString()}</div>
+                      <h3 className="text-lg font-black text-gray-900 uppercase tracking-tighter">{o.customer_name}</h3>
+                      <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">{new Date(o.created_at).toLocaleDateString()} · {o.payment_method?.toUpperCase()}</p>
                     </div>
                   </div>
 
-                  <div className="bg-gray-50/50 rounded-2xl p-4 mb-4">
-                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Order Items</div>
-                    <div className="space-y-2">
-                      {o.items.map((it: any, i: number) => (
-                        <div key={i} className="text-sm font-bold flex justify-between">
-                          <span>{it.name} × {it.qty}</span>
-                          <span>₹{it.price * it.qty}</span>
-                        </div>
-                      ))}
+                  <div className="flex items-center gap-8 text-right">
+                    <div className="hidden md:block">
+                      <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-1">Items</div>
+                      <div className="text-xs font-black">{o.items.length} Product{o.items.length > 1 ? 's' : ''}</div>
                     </div>
-                  </div>
-
-                  {o.payment_method === 'online' && (
-                    <div className="bg-brand/5 border border-brand/10 rounded-2xl p-4 mb-4">
-                      <div className="flex justify-between items-center mb-1">
-                        <div className="text-[10px] font-black text-brand uppercase tracking-widest">Transaction ID / UTR</div>
-                        <div className="text-[10px] font-black text-brand uppercase tracking-widest">Verified Payment Required</div>
-                      </div>
-                      <div className="font-mono font-black text-brand text-lg">{o.transaction_id || 'NOT PROVIDED'}</div>
+                    <div>
+                      <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-1">Amount</div>
+                      <div className="text-xl font-black text-brand">₹{o.total}</div>
                     </div>
-                  )}
-
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {o.status === 'pending' && (
-                      <>
-                        <button onClick={() => updateStatus(o.id, 'confirmed')} className="bg-brand text-white px-6 py-2 rounded-xl font-bold text-sm shadow-lg shadow-brand/20 transition-all hover:scale-105">Confirm Order</button>
-                        <button onClick={() => updateStatus(o.id, 'cancelled')} className="bg-gray-100 text-gray-500 px-6 py-2 rounded-xl font-bold text-sm hover:bg-red-50 hover:text-red-500 transition-all">Cancel</button>
-                      </>
-                    )}
-                    {o.status === 'confirmed' && (
-                      <button onClick={() => updateStatus(o.id, 'delivered')} className="bg-green-500 text-white px-6 py-2 rounded-xl font-bold text-sm shadow-lg shadow-green-500/20 transition-all hover:scale-105">Mark as Delivered</button>
-                    )}
+                    <ChevronRight size={24} className="text-gray-200 group-hover:text-brand transition-colors" />
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -238,8 +238,8 @@ export function AdminPage() {
         {activeTab === 'settings' && (
           <div className="animate-fade-up max-w-2xl">
             <header className="mb-8">
-              <h1 className="text-3xl font-black">Store Settings</h1>
-              <p className="text-gray-500">Configure payments and store-wide details</p>
+              <h1 className="text-3xl font-black tracking-tight">Store Settings</h1>
+              <p className="text-gray-500 font-medium">Configure payments and store-wide details</p>
             </header>
 
             <div className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm space-y-8">
@@ -361,6 +361,169 @@ export function AdminPage() {
                 {editingId ? 'Update Product' : 'Add to Catalog'}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Order Details Modal */}
+      {orderModalOpen && selectedOrder && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[1000] flex items-center justify-center p-4">
+          <div className="bg-white rounded-[40px] w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-[#f4f7f9]">
+              <div>
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="font-mono text-xs font-black text-gray-400">ORDER #{selectedOrder.id.toUpperCase()}</span>
+                  <StatusBadge status={selectedOrder.status} />
+                </div>
+                <h2 className="text-2xl font-black tracking-tight">{new Date(selectedOrder.created_at).toLocaleString()}</h2>
+              </div>
+              <button onClick={() => setOrderModalOpen(false)} className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm hover:bg-gray-50 transition-all"><X /></button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-8 space-y-8">
+              {/* Customer Info Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                    <User size={14} className="text-brand" /> Customer Details
+                  </h3>
+                  <div className="bg-[#f4f7f9] p-5 rounded-3xl space-y-3">
+                    <div>
+                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Name</div>
+                      <div className="text-sm font-black uppercase">{selectedOrder.customer_name}</div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Phone size={14} className="text-gray-300" />
+                      <div className="text-sm font-bold">{selectedOrder.customer_phone}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                    <MapPin size={14} className="text-brand" /> Delivery Address
+                  </h3>
+                  <div className="bg-[#f4f7f9] p-5 rounded-3xl">
+                    <div className="text-sm font-bold leading-relaxed">
+                      {selectedOrder.delivery_address?.address},<br />
+                      {selectedOrder.delivery_address?.city} - {selectedOrder.delivery_address?.pincode}<br />
+                      <span className="text-xs text-gray-400 font-medium italic mt-2 block">Landmark: {selectedOrder.delivery_address?.landmark || 'None'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Items Section */}
+              <div className="space-y-4">
+                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                  <ShoppingBag size={14} className="text-brand" /> Order Items
+                </h3>
+                <div className="border border-gray-100 rounded-3xl overflow-hidden">
+                  <table className="w-full text-left">
+                    <thead className="bg-gray-50">
+                      <tr className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        <th className="px-6 py-4">Product</th>
+                        <th className="px-6 py-4 text-center">Qty</th>
+                        <th className="px-6 py-4 text-right">Price</th>
+                        <th className="px-6 py-4 text-right">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {selectedOrder.items.map((it: any, i: number) => (
+                        <tr key={i} className="text-sm font-bold">
+                          <td className="px-6 py-4">{it.emoji || '🛍️'} {it.name}</td>
+                          <td className="px-6 py-4 text-center">×{it.qty}</td>
+                          <td className="px-6 py-4 text-right">₹{it.price || 0}</td>
+                          <td className="px-6 py-4 text-right">₹{(it.price || 0) * it.qty}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Payment & Summary */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                    <CreditCard size={14} className="text-brand" /> Payment Info
+                  </h3>
+                  <div className="bg-[#f4f7f9] p-5 rounded-3xl space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Method</span>
+                      <span className="text-xs font-black uppercase text-brand tracking-widest">{selectedOrder.payment_method}</span>
+                    </div>
+                    {selectedOrder.payment_method === 'online' && (
+                      <div className="pt-3 border-t border-gray-100">
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Transaction ID / UTR</span>
+                        <div className="font-mono font-black text-blue-600 bg-white p-3 rounded-xl border border-blue-100 break-all">
+                          {selectedOrder.transaction_id || 'NOT PROVIDED'}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {selectedOrder.note && (
+                    <div className="space-y-2">
+                      <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                        <FileText size={14} className="text-brand" /> Customer Note
+                      </h3>
+                      <div className="bg-yellow-50 border border-yellow-100 p-4 rounded-2xl text-xs font-bold text-yellow-700 italic">
+                        "{selectedOrder.note}"
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                    <Receipt size={14} className="text-brand" /> Order Summary
+                  </h3>
+                  <div className="bg-gray-900 text-white p-6 rounded-[32px] space-y-4 shadow-xl">
+                    <div className="flex justify-between text-xs font-bold text-gray-400">
+                      <span>Subtotal</span>
+                      <span>₹{selectedOrder.subtotal || 0}</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-bold text-gray-400">
+                      <span>GST (5%)</span>
+                      <span>₹{selectedOrder.tax || 0}</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-bold text-gray-400">
+                      <span>Delivery</span>
+                      <span className="text-green-400 font-black uppercase tracking-widest">{selectedOrder.delivery > 0 ? `₹${selectedOrder.delivery}` : 'Free'}</span>
+                    </div>
+                    <div className="pt-4 border-t border-white/10 flex justify-between items-end">
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Total Amount</span>
+                      <span className="text-3xl font-black text-brand tracking-tighter">₹{selectedOrder.total}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer - Actions */}
+            <div className="p-8 border-t border-gray-100 flex gap-4">
+              {selectedOrder.status === 'pending' && (
+                <>
+                  <button onClick={() => updateStatus(selectedOrder.id, 'confirmed')} className="flex-1 bg-brand text-white py-4 rounded-[20px] font-black uppercase tracking-widest shadow-xl shadow-brand/20 transition-all hover:scale-[1.02] active:scale-95">Confirm Order</button>
+                  <button onClick={() => updateStatus(selectedOrder.id, 'cancelled')} className="flex-1 bg-gray-100 text-gray-500 py-4 rounded-[20px] font-black uppercase tracking-widest hover:bg-red-50 hover:text-red-500 transition-all">Cancel Order</button>
+                </>
+              )}
+              {selectedOrder.status === 'confirmed' && (
+                <button onClick={() => updateStatus(selectedOrder.id, 'delivered')} className="flex-1 bg-green-500 text-white py-4 rounded-[20px] font-black uppercase tracking-widest shadow-xl shadow-green-500/20 transition-all hover:scale-[1.02] active:scale-95">Mark as Delivered</button>
+              )}
+              {selectedOrder.status === 'delivered' && (
+                <div className="w-full text-center py-4 text-green-500 font-black uppercase tracking-[0.2em] bg-green-50 rounded-[20px]">
+                  Order Completed Successfully
+                </div>
+              )}
+              {selectedOrder.status === 'cancelled' && (
+                <div className="w-full text-center py-4 text-red-500 font-black uppercase tracking-[0.2em] bg-red-50 rounded-[20px]">
+                  This Order was Cancelled
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

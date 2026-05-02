@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { TopNav } from "@/components/TopNav";
 import { BottomNav } from "@/components/BottomNav";
+import { Footer } from "@/components/Footer";
 import { ShopPage } from "@/components/ShopPage";
 import { CartPage } from "@/components/CartPage";
 import { OrdersPage } from "@/components/OrdersPage";
@@ -42,7 +43,15 @@ function Index() {
 
   useEffect(() => {
     if (!authLoading && !user) navigate({ to: "/auth" });
-  }, [authLoading, user, navigate]);
+    
+    // Auto-cleanup cart: remove items that don't exist in products
+    if (products.length > 0 && Object.keys(cart).length > 0) {
+      const validIds = new Set(products.map(p => p.id));
+      Object.keys(cart).forEach(id => {
+        if (!validIds.has(id)) remove(id);
+      });
+    }
+  }, [authLoading, user, navigate, products, cart, remove]);
 
   if (authLoading || !user || !profile) {
     return (
@@ -89,7 +98,7 @@ function Index() {
       await placeOrder(
         {
           id: orderId,
-          userId: user.uid,
+          userId: user.id,           // ✅ Supabase uses user.id not user.uid
           customerName: profile.name,
           customerPhone: phone,
           note,
@@ -119,7 +128,8 @@ function Index() {
       clear();
       setSuccessId(orderId);
     } catch (e) {
-      showToast("⚠ Failed to send order: " + (e instanceof Error ? e.message.slice(0, 40) : ""), "red");
+      const errMsg = e instanceof Error ? e.message : String(e);
+      showToast("Order failed: " + errMsg, "black");
     } finally {
       setSubmitting(false);
     }
@@ -151,20 +161,20 @@ function Index() {
           onPlace={handlePlace} onBrowse={() => setTab("shop")} />
       );
       case "orders": return <OrdersPage orders={orders} loading={ordersLoading} onBrowse={() => setTab("shop")} />;
-      case "profile": return <ProfilePage user={user} profile={profile} orders={orders} />;
+      case "profile": return <ProfilePage user={user} profile={profile} orders={orders} onBack={() => setTab("shop")} />;
       default: return null;
     }
   };
 
   return (
-    <div className="min-h-dvh bg-background overflow-x-hidden">
+    <div className="min-h-dvh bg-background overflow-x-hidden flex flex-col">
       <TopNav active={tab} cartCount={realTotalQty} name={profile.name} email={profile.email} onChange={(t) => { setSelectedProductId(null); setTab(t); }} />
       
-      <main className="md:px-6 md:py-2">
-        <div className="max-w-[1200px] mx-auto">
-          {renderContent()}
-        </div>
+      <main className="flex-1 w-full px-4 md:px-0">
+        {renderContent()}
       </main>
+
+      <Footer />
 
       <BottomNav active={tab} cartCount={realTotalQty} onChange={(t) => { setSelectedProductId(null); setTab(t); }} />
 

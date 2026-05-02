@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ChevronLeft } from "lucide-react";
 import { signOut, updateProfile, changePassword } from "@/lib/auth";
 import { showToast } from "./Toast";
 import type { UserProfile, Order } from "@/lib/types";
@@ -8,9 +9,10 @@ type Props = {
   user: User;
   profile: UserProfile;
   orders: Order[];
+  onBack: () => void;
 };
 
-export function ProfilePage({ user, profile, orders }: Props) {
+export function ProfilePage({ user, profile, orders, onBack }: Props) {
   const [editing, setEditing] = useState(false);
   const [changingPwd, setChangingPwd] = useState(false);
 
@@ -67,7 +69,16 @@ export function ProfilePage({ user, profile, orders }: Props) {
   const initial = profile.name.charAt(0).toUpperCase();
 
   return (
-    <div className="animate-fade-up pb-[100px] md:pb-10 px-3.5 md:px-0 pt-3.5 max-w-[640px] mx-auto w-full">
+    <div className="animate-fade-up pb-[100px] md:pb-10 px-6 md:px-10 pt-6 w-full">
+      {/* Back Button */}
+      <button
+        onClick={onBack}
+        className="group flex items-center gap-2 bg-white border border-gray-100 px-5 py-2.5 rounded-full shadow-sm hover:shadow-md hover:border-brand/30 transition-all active:scale-95 mb-6"
+      >
+        <ChevronLeft size={18} className="text-brand group-hover:-translate-x-1 transition-transform" />
+        <span className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 group-hover:text-brand">Back to Shop</span>
+      </button>
+
       <div className="bg-surface rounded-[16px] border-[1.5px] border-line p-5 md:p-6 mb-3">
         <div className="flex items-center gap-4">
           <div

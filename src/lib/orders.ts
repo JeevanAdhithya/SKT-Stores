@@ -13,6 +13,7 @@ export function newOrderId() {
 export async function placeOrder(order: Order, products: Product[]) {
   // Insert order
   const { error: orderError } = await supabase.from("orders").insert({
+    id: order.id,
     user_id: order.userId,
     customer_name: order.customerName,
     customer_phone: order.customerPhone,

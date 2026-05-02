@@ -1,5 +1,5 @@
 import { Product, UserProfile } from "@/lib/types";
-import { ArrowLeft, ShoppingCart, Zap, ShieldCheck, Truck, RefreshCw } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Zap, ShieldCheck, Truck, RefreshCw, ChevronLeft } from "lucide-react";
 import { useState } from "react";
 
 type Props = {
@@ -16,84 +16,101 @@ export function ProductDetailPage({ product, qtyInCart, onAdd, onInc, onDec, onB
   const [imgError, setImgError] = useState(false);
 
   return (
-    <div className="animate-fade-up max-w-[1200px] mx-auto pb-24">
-      {/* Mobile Back Button */}
-      <button onClick={onBack} className="md:hidden p-4 text-brand flex items-center gap-2 font-bold">
-        <ArrowLeft size={20} /> Back
-      </button>
+    <div className="animate-fade-up pb-24 w-full">
+      {/* Back Button Container - Always Visible & Full Width */}
+      <div className="px-6 md:px-10 py-6">
+        <button 
+          onClick={onBack} 
+          className="group flex items-center gap-3 bg-white border border-gray-100 px-6 py-3 rounded-full shadow-sm hover:shadow-md hover:border-brand/30 transition-all active:scale-95"
+        >
+          <ChevronLeft size={20} className="text-brand group-hover:-translate-x-1 transition-transform" />
+          <span className="text-xs font-black uppercase tracking-[0.2em] text-gray-500 group-hover:text-brand">Back to Products</span>
+        </button>
+      </div>
 
-      <div className="grid md:grid-cols-2 gap-12 p-4 md:p-10">
+      <div className="grid lg:grid-cols-2 gap-12 px-6 md:px-10 py-4">
         {/* Left: Image Section */}
         <div className="space-y-6">
-          <div className="aspect-square bg-white rounded-[48px] border border-line shadow-xl flex items-center justify-center overflow-hidden group">
+          <div className="aspect-square bg-white rounded-[48px] border border-[#f4f7f9] shadow-xl flex items-center justify-center overflow-hidden group relative">
             {product.img && !imgError ? (
               <img 
                 src={product.img} 
                 alt={product.name} 
-                className="w-full h-full object-contain p-8 group-hover:scale-105 transition-transform duration-500" 
+                className="w-full h-full object-contain p-8 md:p-16 group-hover:scale-105 transition-transform duration-700" 
                 onError={() => setImgError(true)}
               />
             ) : (
-              <span className="text-[120px]">{product.emoji || "📦"}</span>
+              <span className="text-[140px] drop-shadow-2xl">{product.emoji || "📦"}</span>
             )}
+            
+            <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent pointer-events-none"></div>
           </div>
           
           {/* Trust Badges */}
-          <div className="grid grid-cols-3 gap-4">
-             <Badge icon={<ShieldCheck className="text-brand" size={18} />} label="Genuine Product" />
-             <Badge icon={<Truck className="text-brand" size={18} />} label="Fast Delivery" />
-             <Badge icon={<RefreshCw className="text-brand" size={18} />} label="7-Day Return" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+             <Badge icon={<ShieldCheck className="text-brand" size={24} />} title="GENUINE" label="Product" />
+             <Badge icon={<Truck className="text-brand" size={24} />} title="FAST" label="Delivery" />
+             <Badge icon={<RefreshCw className="text-brand" size={24} />} title="7-DAY" label="Return" />
           </div>
         </div>
 
         {/* Right: Info Section */}
-        <div className="flex flex-col">
-          <div className="mb-2">
-            <span className="bg-brand/10 text-brand px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-brand/20">
+        <div className="flex flex-col py-4">
+          <div className="mb-4">
+            <span className="bg-brand/10 text-brand px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-brand/20">
               {product.category}
             </span>
           </div>
-          <h1 className="text-3xl md:text-5xl font-black mb-4 tracking-tighter leading-tight">
+          <h1 className="text-4xl md:text-7xl font-black mb-6 tracking-tighter leading-none text-gray-900">
             {product.name}
           </h1>
           
-          <div className="flex items-center gap-4 mb-6">
-            <span className="text-4xl font-black text-brand">₹{product.price}</span>
-            <span className="text-sm font-bold text-muted-text line-through opacity-50">₹{Math.round(product.price * 1.4)}</span>
-            <span className="bg-green-500 text-white text-[11px] font-black px-2.5 py-1 rounded-lg">40% OFF</span>
+          <div className="flex items-center gap-6 mb-10">
+            <div className="flex flex-col">
+               <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-1">Our Price</span>
+               <span className="text-5xl font-black text-brand tracking-tighter">₹{product.price}</span>
+            </div>
+            <div className="flex flex-col opacity-40">
+               <span className="text-[10px] font-black uppercase tracking-widest mb-1">M.R.P</span>
+               <span className="text-xl font-bold line-through">₹{Math.round(product.price * 1.4)}</span>
+            </div>
+            <div className="bg-green-500 text-white text-xs font-black px-4 py-2 rounded-2xl shadow-lg shadow-green-500/20">
+              40% OFF
+            </div>
           </div>
 
-          <div className="space-y-6 mb-10">
-            <div className="bg-surface-muted p-6 rounded-[32px] border border-line">
-              <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3">Product Description</h3>
-              <p className="text-gray-600 font-bold leading-relaxed">
-                Experience premium quality with our {product.name}. Carefully sourced and rigorously tested to ensure the best performance. {product.tag ? `This item is currently tagged as "${product.tag}".` : ""}
+          <div className="space-y-8 mb-12">
+            <div className="bg-[#f4f7f9] p-8 rounded-[40px] border border-[#e4e9ed]">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">Product Description</h3>
+              <p className="text-gray-600 font-bold leading-relaxed text-sm md:text-base">
+                Experience premium quality with our {product.name}. Carefully sourced and rigorously tested to ensure the best performance. {product.tag ? `This exclusive item is currently featured as part of our "${product.tag}" collection.` : "A perfect addition to your curated lifestyle."}
               </p>
             </div>
 
-            <div className="flex items-center gap-4">
-              <div className={`text-xs font-black uppercase tracking-widest ${product.stock > 0 ? 'text-green-500' : 'text-red-500'}`}>
-                {product.stock > 0 ? `✓ In Stock (${product.stock} left)` : '✗ Out of Stock'}
-              </div>
+            <div className="flex items-center gap-3 bg-white border border-gray-100 w-fit px-6 py-3 rounded-full shadow-sm">
+              <div className={`w-2.5 h-2.5 rounded-full ${product.stock > 0 ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+              <span className={`text-xs font-black uppercase tracking-widest ${product.stock > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                {product.stock > 0 ? `In Stock (${product.stock} units left)` : 'Out of Stock'}
+              </span>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="mt-auto space-y-4">
-            <div className="flex gap-4">
+          <div className="mt-auto space-y-5">
+            <div className="flex gap-5">
               {qtyInCart > 0 ? (
-                <div className="flex-1 flex items-center justify-between bg-surface-muted rounded-[24px] border border-line p-1.5 h-[64px]">
-                  <button onClick={() => onDec(product.id)} className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center font-black text-2xl active:scale-90 transition-all">−</button>
-                  <span className="font-black text-xl">{qtyInCart}</span>
-                  <button onClick={() => onInc(product.id, product.stock)} className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center font-black text-2xl active:scale-90 transition-all">+</button>
+                <div className="flex-1 flex items-center justify-between bg-[#f4f7f9] rounded-[32px] border border-[#e4e9ed] p-2 h-[80px]">
+                  <button onClick={() => onDec(product.id)} className="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center font-black text-3xl hover:bg-brand hover:text-white transition-all active:scale-90">-</button>
+                  <span className="font-black text-2xl tracking-tighter">{qtyInCart}</span>
+                  <button onClick={() => onInc(product.id, product.stock)} className="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center font-black text-3xl hover:bg-brand hover:text-white transition-all active:scale-90">+</button>
                 </div>
               ) : (
                 <button 
                   onClick={() => onAdd(product.id)}
                   disabled={product.stock <= 0}
-                  className="flex-1 bg-white border-2 border-brand text-brand h-[64px] rounded-[24px] font-black text-lg flex items-center justify-center gap-3 hover:bg-brand/5 active:scale-95 transition-all disabled:opacity-50"
+                  className="flex-1 bg-white border-2 border-brand text-brand h-[80px] rounded-[32px] font-black text-xl flex items-center justify-center gap-4 hover:bg-brand hover:text-white shadow-xl shadow-brand/5 active:scale-95 transition-all disabled:opacity-50"
                 >
-                  <ShoppingCart size={22} /> Add to Cart
+                  <ShoppingCart size={26} /> Add to Cart
                 </button>
               )}
             </div>
@@ -101,9 +118,9 @@ export function ProductDetailPage({ product, qtyInCart, onAdd, onInc, onDec, onB
             <button 
               onClick={() => onBuyNow(product.id)}
               disabled={product.stock <= 0}
-              className="w-full bg-brand hover:bg-brand-hover text-white h-[64px] rounded-[24px] font-black text-xl flex items-center justify-center gap-3 shadow-xl shadow-brand/30 active:scale-95 transition-all disabled:opacity-50"
+              className="w-full bg-brand hover:bg-brand-hover text-white h-[80px] rounded-[32px] font-black text-2xl flex items-center justify-center gap-4 shadow-2xl shadow-brand/30 active:scale-95 transition-all disabled:opacity-50 tracking-tight"
             >
-              <Zap size={22} fill="white" /> Buy Now
+              <Zap size={26} fill="white" /> Buy It Now
             </button>
           </div>
         </div>
@@ -112,11 +129,14 @@ export function ProductDetailPage({ product, qtyInCart, onAdd, onInc, onDec, onB
   );
 }
 
-function Badge({ icon, label }: { icon: React.ReactNode, label: string }) {
+function Badge({ icon, title, label }: { icon: React.ReactNode, title: string, label: string }) {
   return (
-    <div className="flex flex-col items-center gap-2 p-4 bg-white rounded-3xl border border-line text-center shadow-sm">
-      {icon}
-      <span className="text-[10px] font-black uppercase tracking-wider text-gray-500 leading-tight">{label}</span>
+    <div className="flex items-center gap-4 p-6 bg-white rounded-[32px] border border-[#f4f7f9] shadow-sm hover:shadow-md transition-all">
+      <div className="w-14 h-14 bg-[#f4f7f9] rounded-2xl flex items-center justify-center">{icon}</div>
+      <div className="flex flex-col">
+        <span className="text-[10px] font-black text-brand uppercase tracking-widest leading-none mb-1">{title}</span>
+        <span className="text-xs font-black uppercase tracking-widest text-gray-400 leading-none">{label}</span>
+      </div>
     </div>
   );
 }

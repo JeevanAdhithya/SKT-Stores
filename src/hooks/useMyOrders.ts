@@ -39,6 +39,8 @@ export function useMyOrders(userId: string | undefined) {
           status: d.status,
           createdAt: d.created_at,
           deliveryAddress: d.delivery_address,
+          paymentMethod: d.payment_method || "cod",
+          transactionId: d.transaction_id,
         }));
         setOrders(list);
       }
@@ -47,7 +49,6 @@ export function useMyOrders(userId: string | undefined) {
 
     fetchOrders();
 
-    // Optional: Real-time updates for orders
     const channel = supabase
       .channel(`orders_${userId}`)
       .on(
