@@ -7,6 +7,10 @@ export type Product = {
   emoji?: string;
   img?: string;
   tag?: string;
+  original_price?: number;
+  description?: string;
+  brand?: string;
+  highlights?: string[];
 };
 
 export type CartItem = {

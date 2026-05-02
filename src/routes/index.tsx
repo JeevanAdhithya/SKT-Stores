@@ -30,7 +30,7 @@ function Index() {
   const { user, profile, loading: authLoading } = useAuth();
   const { products } = useProducts();
   const { cart, add, inc, dec, remove, clear } = useCart();
-  const { orders, loading: ordersLoading } = useMyOrders(user?.uid);
+  const { orders, loading: ordersLoading } = useMyOrders(user?.id);
   const [tab, setTab] = useState<Tab>("shop");
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
