@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Product } from "@/lib/types";
 
@@ -10,34 +10,33 @@ export function useProducts() {
   const [error, setError] = useState<string>("");
   const [updated, setUpdated] = useState(false);
 
-  useEffect(() => {
+  const fetchProducts = useCallback(async () => {
     let prevSnap = "";
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("active", true)
+      .order("name");
 
-    const fetchProducts = async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("active", true)
-        .order("name");
+    if (error) {
+      setSync("err");
+      setError(error.message);
+      return;
+    }
 
-      if (error) {
-        setSync("err");
-        setError(error.message);
-        return;
-      }
+    const list: Product[] = data || [];
+    const snapStr = JSON.stringify(list);
+    if (prevSnap && snapStr !== prevSnap) {
+      setUpdated(true);
+      setTimeout(() => setUpdated(false), 3000);
+    }
+    prevSnap = snapStr;
+    setProducts(list);
+    setSync("ok");
+    setError("");
+  }, []);
 
-      const list: Product[] = data || [];
-      const snapStr = JSON.stringify(list);
-      if (prevSnap && snapStr !== prevSnap) {
-        setUpdated(true);
-        setTimeout(() => setUpdated(false), 3000);
-      }
-      prevSnap = snapStr;
-      setProducts(list);
-      setSync("ok");
-      setError("");
-    };
-
+  useEffect(() => {
     fetchProducts();
 
     // Subscribe to changes
@@ -53,7 +52,7 @@ export function useProducts() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [fetchProducts]);
 
-  return { products, sync, error, updated };
+  return { products, sync, error, updated, refetch: fetchProducts };
 }

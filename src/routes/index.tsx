@@ -28,9 +28,9 @@ type Tab = "shop" | "cart" | "orders" | "profile";
 function Index() {
   const navigate = useNavigate();
   const { user, profile, loading: authLoading } = useAuth();
-  const { products } = useProducts();
+  const { products, refetch: refetchProducts } = useProducts();
   const { cart, add, inc, dec, remove, clear } = useCart();
-  const { orders, loading: ordersLoading } = useMyOrders(user?.id);
+  const { orders, loading: ordersLoading, refetch: refetchOrders } = useMyOrders(user?.id);
   const [tab, setTab] = useState<Tab>("shop");
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -52,6 +52,15 @@ function Index() {
       });
     }
   }, [authLoading, user, navigate, products, cart, remove]);
+
+  useEffect(() => {
+    if (tab === "orders" || tab === "profile") {
+      refetchOrders();
+    }
+    if (tab === "shop" || tab === "cart") {
+      refetchProducts();
+    }
+  }, [tab, refetchOrders, refetchProducts]);
 
   if (authLoading || !user || !profile) {
     return (
@@ -115,6 +124,7 @@ function Index() {
         },
         products,
       );
+      await refetchOrders();
       const patch: Record<string, string> = {};
       if (phone && phone !== profile.phone) patch.phone = phone;
       if (saveAsDefault) {

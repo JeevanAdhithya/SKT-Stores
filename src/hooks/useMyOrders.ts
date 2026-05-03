@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Order } from "@/lib/types";
 
@@ -7,6 +7,40 @@ export function useMyOrders(userId: string | undefined) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
 
+  const fetchOrders = useCallback(async () => {
+    if (!userId) return;
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      setError(error.message);
+    } else {
+      const list: Order[] = (data || []).map(d => ({
+        id: d.id,
+        userId: d.user_id,
+        customerName: d.customer_name,
+        customerPhone: d.customer_phone,
+        note: d.note,
+        items: d.items,
+        subtotal: d.subtotal,
+        tax: d.tax,
+        delivery: d.delivery,
+        total: d.total,
+        status: d.status,
+        createdAt: d.created_at,
+        deliveryAddress: d.delivery_address,
+        paymentMethod: d.payment_method || "cod",
+        transactionId: d.transaction_id,
+      }));
+      setOrders(list);
+    }
+    setLoading(false);
+  }, [userId]);
+
   useEffect(() => {
     if (!userId) {
       setOrders([]);
@@ -14,39 +48,6 @@ export function useMyOrders(userId: string | undefined) {
       return;
     }
     
-    const fetchOrders = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        setError(error.message);
-      } else {
-        const list: Order[] = (data || []).map(d => ({
-          id: d.id,
-          userId: d.user_id,
-          customerName: d.customer_name,
-          customerPhone: d.customer_phone,
-          note: d.note,
-          items: d.items,
-          subtotal: d.subtotal,
-          tax: d.tax,
-          delivery: d.delivery,
-          total: d.total,
-          status: d.status,
-          createdAt: d.created_at,
-          deliveryAddress: d.delivery_address,
-          paymentMethod: d.payment_method || "cod",
-          transactionId: d.transaction_id,
-        }));
-        setOrders(list);
-      }
-      setLoading(false);
-    };
-
     fetchOrders();
 
     const channel = supabase
@@ -61,7 +62,7 @@ export function useMyOrders(userId: string | undefined) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId]);
+  }, [userId, fetchOrders]);
 
-  return { orders, loading, error };
+  return { orders, loading, error, refetch: fetchOrders };
 }

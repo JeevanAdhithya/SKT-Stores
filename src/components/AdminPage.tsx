@@ -25,7 +25,6 @@ export function AdminPage() {
   });
 
   useEffect(() => {
-    fetchData();
     getStoreSettings().then(setStoreSettings);
 
     // Real-time subscription for orders
@@ -44,6 +43,10 @@ export function AdminPage() {
 
     return () => { supabase.removeChannel(channel); };
   }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [activeTab]);
 
   const fetchData = async () => {
     setLoading(true);
